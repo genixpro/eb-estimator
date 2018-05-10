@@ -4,6 +4,7 @@ import DeepLearningEstimateConfiguration from './DeepLearningEstimateConfigurati
 import Estimate from './Estimate';
 import DataAnnotationEstimateConfiguration from "./DataAnnotationEstimateConfiguration";
 import CustomEstimateConfiguration from "./CustomEstimateConfiguration";
+import RPAEstimateConfiguration from "./RPAEstimateConfiguration";
 
 class EstimateConfiguration extends Component {
 
@@ -51,6 +52,11 @@ class EstimateConfiguration extends Component {
                         this.props.estimate.type === 'custom' ?
                             <CustomEstimateConfiguration estimate={this.props.estimate} index={this.props.index} onChange={this.props.onChange}>
                             </CustomEstimateConfiguration> : null
+                    }
+                    {
+                        this.props.estimate.type === 'rpa' ?
+                            <RPAEstimateConfiguration estimate={this.props.estimate} index={this.props.index} onChange={this.props.onChange}>
+                            </RPAEstimateConfiguration> : null
                     }
                 </Col>
                 <Col xs={4} md={2}>

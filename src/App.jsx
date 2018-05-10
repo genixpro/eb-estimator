@@ -59,6 +59,7 @@ class App extends Component {
     addDeepLearningEstimate() {
         const estimates = this.state.estimates;
         estimates.push({
+            name: "New Deep Learning Algorithm.",
             key: this.nextEstimateKey(),
             type: "deep_learning"
         });
@@ -93,6 +94,20 @@ class App extends Component {
         this.saveState();
     }
 
+    addRPAEstimate() {
+        const estimates = this.state.estimates;
+        estimates.push({
+            name: "New RPA Estimate",
+            key: this.nextEstimateKey(),
+            type: "rpa",
+	    processes: [{
+	        name: "New Process",
+		steps: 5
+	    }]
+        });
+        this.setState({estimates: estimates});
+        this.saveState();
+    }
     resetEstimates() {
         window.bootbox.confirm("Are you sure you want to reset your estimates? You will lose everything.", (result) => {
             if (result) {
@@ -282,6 +297,9 @@ class App extends Component {
                                         </Col>
                                         <Col xs={6} md={3}>
                                             <Button onClick={this.addDataAnnotation.bind(this)}>Add Data Annotation</Button>
+                                        </Col>
+                                        <Col xs={6} md={3}>
+                                            <Button onClick={this.addRPAEstimate.bind(this)}>Add RPA</Button>
                                         </Col>
                                         <Col xs={6} md={3}>
                                             <Button onClick={this.addCustom.bind(this)}>Add Custom</Button>

@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
-import {Col, Checkbox, FormGroup, ControlLabel} from 'react-bootstrap';
-import Estimate from './Estimate';
+import {Form, FormControl, Col, Checkbox, FormGroup, ControlLabel} from 'react-bootstrap';
+//import Estimate from './Estimate';
 
 class DeepLearningEstimateConfiguration extends Component {
     componentDidMount() {

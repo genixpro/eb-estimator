@@ -94,6 +94,30 @@ const estimateSchema = {
                 }
             },
             additionalProperties: false
+        },
+        {
+            properties: {
+                "key": {type: "string"},
+                "type": {
+                    type: "string",
+                    const: "rpa"
+                },
+                "name": {type: "string"},
+		"vendor_selection": {type: "boolean"},
+		"deployment_configuration": {type: "boolean"},
+                "processes": {
+                    type: "array",
+                    items: {
+			    type: "object",
+			    properties: {
+				    "name": {type: "string"},
+				    "steps": {type: "number"}
+			    }
+
+		    }
+                }
+            },
+            additionalProperties: false
         }
     ]
 };
@@ -525,6 +549,117 @@ class Estimate {
         if (this.type === 'deep_learning') {
 
         }
+
+        if (this.type === 'rpa') {
+            tasks.push({
+                type: "component",
+                name: this.name,
+                hours: null,
+                groups: groups
+            });
+
+	    if (this.vendor_selection)
+	    {
+	            tasks.push({
+        	        type: "task",
+	                name: "RPA Vendor Selection",
+	                hours: null,
+	                groups: groups.concat(['vendor_selection'])
+	            });
+
+	            tasks.push({
+        	        type: "task",
+	                name: "Initial technical discovery session",
+	                hours: 4,
+	                groups: groups.concat(['vendor_selection'])
+	            });
+
+	            tasks.push({
+        	        type: "task",
+	                name: "Preparation of pro/con sheets on compatible vendors",
+	                hours: 10,
+	                groups: groups.concat(['vendor_selection'])
+	            });
+
+	            tasks.push({
+        	        type: "task",
+	                name: "Vendor selection session with team",
+	                hours: 2,
+	                groups: groups.concat(['vendor_selection'])
+	            });
+	    }
+	
+	    if (this.deployment_configuration)
+	    {
+	            tasks.push({
+        	        type: "task",
+	                name: "RPA Deployment Configuration",
+	                hours: null,
+	                groups: groups.concat(['deployment_configuration'])
+	            });
+
+	            tasks.push({
+        	        type: "task",
+	                name: "Go through security protocols to get team access to servers",
+	                hours: 8,
+	                groups: groups.concat(['deployment_configuration'])
+	            });
+
+	            tasks.push({
+        	        type: "task",
+	                name: "Configure the central RPA bot software and cluster",
+	                hours: 40,
+	                groups: groups.concat(['deployment_configuration'])
+	            });
+	    }    
+	
+	    this.processes.forEach((process) => {
+		    if (process.name.trim())
+		    {
+			    tasks.push({
+				    type: "component",
+				    name: process.name,
+				    hours: null,
+				    groups: groups.concat(['rpa-' + process.name])
+			    });
+			    tasks.push({
+				    type: "component",
+				    name: "Job shadowing of person performing the process",
+				    hours: 2,
+				    groups: groups.concat(['rpa-' + process.name])
+			    });
+
+                            // Calculate how long we expect to be configuring this process within the RPA tool
+			    const configHoursPerStep = 0.15;
+			    const fieldTestingHoursPerStep = 0.10;
+			    const totalStepConfigTime = process.steps * configHoursPerStep;
+			    const totalStepFieldTestingTime = process.steps * fieldTestingHoursPerStep;
+
+			    tasks.push({
+				    type: "task",
+				    name: "Initial configuration of the process steps within the RPA tool",
+				    hours: Math.ceil(8 + totalStepConfigTime),
+				    groups: groups.concat(['rpa-' + process.name])
+			    });
+
+			    tasks.push({
+				    type: "task",
+				    name: "Process field testing with operations team and refinement",
+				    hours: Math.ceil(2 + totalStepFieldTestingTime),
+				    groups: groups.concat(['rpa-' + process.name])
+			    });
+
+			    tasks.push({
+				    type: "task",
+				    name: "Integration of RPA process into other company systems",
+				    hours: 8,
+				    groups: groups.concat(['rpa-' + process.name])
+			    });
+		    }
+	    });
+
+        }
+
 
         if (this.type === 'custom') {
             tasks.push({
