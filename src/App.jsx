@@ -10,7 +10,9 @@ import {
     ListGroupItem,
     Table,
     ControlLabel,
+    Form,
     FormGroup,
+    FormControl,
     Checkbox
 } from 'react-bootstrap';
 import EstimateConfiguration from './EstimateConfiguration.jsx';
@@ -38,19 +40,36 @@ class App extends Component {
         if (!data) {
             data = this.getDefaultState();
         }
+        else {
+            data.selected = 0;
+        }
 
         this.state = data;
         this.saveState();
     }
 
-
-    getDefaultState() {
+    getDefaultProject() {
         return {
+            name: "new_name",
             includeRepositorySetup: true,
             includeLearningExistingCode: false,
             currentEstimateKey: 1,
             estimates: []
         };
+    }
+
+    getDefaultState() {
+        const defaultProject = this.getDefaultProject();
+        return {
+            projects: [defaultProject],
+            selected: 0
+        };
+    }
+
+    changeName(event) {
+        const selected = this.state.projects[this.state.selected];
+        selected.name = event.target.value;
+        this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
 
     saveState() {
@@ -59,13 +78,16 @@ class App extends Component {
     }
 
     checkboxClicked(optionKey, event) {
-        const value = this.state[optionKey];
-        this.setState({[optionKey]: !value}, this.saveState.bind(this));
+        const selected = this.state.projects[this.state.selected];
+        selected[optionKey] = !selected[optionKey];
+        this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
 
     nextEstimateKey() {
-        const key = this.state.currentEstimateKey;
-        this.setState({currentEstimateKey: key + 1}, this.saveState.bind(this));
+        const key = this.state.projects[this.state.selected].currentEstimateKey;
+        const project = this.state.projects[this.state.selected];
+        project.key = key + 1;
+        this.setState({projects: this.state.projects}, this.saveState.bind(this));
         return "estimate-" + key.toString();
     }
 
@@ -76,8 +98,9 @@ class App extends Component {
             type: "deep_learning",
             children: []
         };
-        const estimates = this.state.estimates.concat([newEstimate]);
-        this.setState({estimates: estimates}, this.saveState.bind(this));
+        const project = this.state.projects[this.state.selected];
+        project.estimates = project.estimates.concat([newEstimate]);
+        this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
 
     addDataAnnotation() {
@@ -86,8 +109,9 @@ class App extends Component {
             type: "data_annotation",
             children: []
         };
-        const estimates = this.state.estimates.concat([newEstimate]);
-        this.setState({estimates: estimates}, this.saveState.bind(this));
+        const project = this.state.projects[this.state.selected];
+        project.estimates = project.estimates.concat([newEstimate]);
+        this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
 
     addCustom() {
@@ -99,12 +123,13 @@ class App extends Component {
                 type: "component",
                 title: "New Task",
                 hours: 0,
-                groups: []
+                children: []
             }],
             children: []
         };
-        const estimates = this.state.estimates.concat([newEstimate]);
-        this.setState({estimates: estimates}, this.saveState.bind(this));
+        const project = this.state.projects[this.state.selected];
+        project.estimates = project.estimates.concat([newEstimate]);
+        this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
 
     addRPAEstimate() {
@@ -118,8 +143,9 @@ class App extends Component {
             }],
             children: []
         };
-        const estimates = this.state.estimates.concat([newEstimate]);
-        this.setState({estimates: estimates}, this.saveState.bind(this));
+        const project = this.state.projects[this.state.selected];
+        project.estimates = project.estimates.concat([newEstimate]);
+        this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
 
     addGroup() {
@@ -129,8 +155,9 @@ class App extends Component {
             title: "New Estimate Group",
             children: []
         };
-        const estimates = this.state.estimates.concat([newEstimate]);
-        this.setState({estimates: estimates}, this.saveState.bind(this));
+        const project = this.state.projects[this.state.selected];
+        project.estimates = project.estimates.concat([newEstimate]);
+        this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
 
     addUserInterfaceEstimate() {
@@ -146,44 +173,56 @@ class App extends Component {
             }],
             children: []
         };
-        const estimates = this.state.estimates.concat([newEstimate]);
-        this.setState({estimates: estimates}, this.saveState.bind(this));
+        const project = this.state.projects[this.state.selected];
+        project.estimates = project.estimates.concat([newEstimate]);
+        this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
 
 
-    resetEstimates() {
+    resetProject() {
         window.bootbox.confirm("Are you sure you want to reset your estimates? You will lose everything.", (result) => {
             if (result) {
-                this.setState(this.getDefaultState(), this.saveState.bind(this));
+                this.setState(state => {
+                    state.projects[state.selected] = this.getDefaultProject();
+                    return state;
+                }, this.saveState.bind(this));
             }
         });
     }
 
     deleteEstimate(path) {
-        this.setState(state => ({
-            estimates: removeNodeAtPath({
+        this.setState(state => {
+            const project = state.projects[state.selected];
+            project.estimates = removeNodeAtPath({
                 treeData: state.estimates,
                 path: path,
                 getNodeKey: ((data) => data.treeIndex)
-            })
-        }), this.saveState.bind(this));
+            });
+            return {
+                projects: state.projects
+            };
+        }, this.saveState.bind(this));
     }
 
     estimateChanged(path, newEstimate) {
-        this.setState(state => ({
-            estimates: changeNodeAtPath({
-                treeData: state.estimates,
+        this.setState(state => {
+            const project = state.projects[state.selected];
+            project.estimates = changeNodeAtPath({
+                treeData: project.estimates,
                 path: path,
                 newNode: newEstimate,
                 getNodeKey: ((data) => data.treeIndex)
-            })
-        }), this.saveState.bind(this));
+            });
+            return {
+                projects: state.projects
+            }
+        }, this.saveState.bind(this));
     }
 
     createProjectSetupTasks() {
         const tasks = [];
 
-        if (this.state.includeRepositorySetup || this.state.includeLearningExistingCode) {
+        if (this.state.projects[this.state.selected].includeRepositorySetup || this.state.projects[this.state.selected].includeLearningExistingCode) {
             const projectSetup = {
                 type: "task",
                 title: "Project Setup",
@@ -194,7 +233,7 @@ class App extends Component {
 
             tasks.push(projectSetup);
 
-            if (this.state.includeRepositorySetup) {
+            if (this.state.projects[this.state.selected].includeRepositorySetup) {
                 projectSetup.children.push({
                     type: "task",
                     title: "Create repository, project trackers and do initial project setup",
@@ -203,7 +242,7 @@ class App extends Component {
                 });
             }
 
-            if (this.state.includeLearningExistingCode) {
+            if (this.state.projects[this.state.selected].includeLearningExistingCode) {
                 projectSetup.children.push({
                     type: "task",
                     title: "Spend time reviewing and studying the existing code-base",
@@ -223,14 +262,14 @@ class App extends Component {
         // Create setup tasks
         tasks = tasks.concat(this.createProjectSetupTasks());
 
-        this.state.estimates.forEach((data, index) => {
+        this.state.projects[this.state.selected].estimates.forEach((data, index) => {
             const estimate = new Estimate(data, index);
             tasks = tasks.concat(estimate.createTasksAndExpenses([]).tasks);
         });
 
         tasks = tasks.map(clone);
 
-        console.log(JSON.stringify(tasks, null, 1));
+        // console.log(JSON.stringify(tasks, null, 1));
 
         // Validate all of the tasks being output
         tasks.forEach((task) => {
@@ -243,10 +282,8 @@ class App extends Component {
         });
 
         // Now we assign the task-numbers
-        const assignNumbers = (tasks, path) =>
-        {
-            tasks.forEach((task, index) =>
-            {
+        const assignNumbers = (tasks, path) => {
+            tasks.forEach((task, index) => {
                 const fullPath = path.concat([index]);
                 task.taskNumber = fullPath.map((index) => (index + 1).toString()).join(".");
                 assignNumbers(task.children, fullPath);
@@ -256,8 +293,7 @@ class App extends Component {
 
         // Now we flatten
         const allTasks = [];
-        const flattenTask = (task) =>
-        {
+        const flattenTask = (task) => {
             allTasks.push(task);
             task.children.forEach((child) => flattenTask(child));
         };
@@ -272,10 +308,9 @@ class App extends Component {
         const visualTasks = [];
 
         tasks.forEach((task) => {
-           if (task.image)
-           {
-               visualTasks.push(task);
-           }
+            if (task.image) {
+                visualTasks.push(task);
+            }
         });
 
         return visualTasks;
@@ -305,14 +340,46 @@ class App extends Component {
                 if (component.mockup) {
                     const elem = document.createElement("img");
                     elem.setAttribute("src", component.mockup);
-                    // console.log(elem.getBoundingClientRect().height);
-                    base += Math.min(200,  elem.naturalHeight);
+                    base += Math.min(200, elem.naturalHeight);
                 }
             });
 
             return base;
         }
         return 200;
+    }
+
+    newProject() {
+        this.setState(state => {
+            state.projects.push(this.getDefaultProject());
+            state.selected = state.projects.length -1;
+            return state;
+        }, this.saveState.bind(this));
+    }
+
+    deleteProject() {
+        if (this.state.projects.length === 1)
+        {
+            window.bootbox.alert('Unable to delete - this is your only remaining project.')
+        }
+        else
+        {
+            window.bootbox.confirm("Are you sure you want to reset your estimates? You will lose everything.", (result) => {
+                if (result) {
+                    this.setState(state => {
+                        if (state.projects.length > 0) {
+                            state.projects.splice(state.selected, 1);
+                            state.selected = 0;
+                        }
+                        return state;
+                    }, this.saveState.bind(this));
+                }
+            });
+        }
+    }
+
+    selectProject(projectIndex) {
+        this.setState({selected: projectIndex})
     }
 
     render() {
@@ -323,12 +390,29 @@ class App extends Component {
                 </header>
                 <Grid fluid={true}>
                     <Row className="show-grid">
-                        <Col xs={12}>
+                        <Col xs={12} md={1}>
+                            <ListGroup>
+                                {
+                                    this.state.projects.map((project, index) =>
+                                        <ListGroupItem href="#"
+                                                       active={index === this.state.selected}
+                                                       onClick={() => this.selectProject(index)}
+                                                       key={index}
+                                        >
+                                            {project.name}
+                                        </ListGroupItem>
+                                    )
+                                }
+                            </ListGroup>
+                            <Button onClick={this.newProject.bind(this)} bsStyle="primary">New Project</Button>
+                            <Button onClick={this.deleteProject.bind(this)} bsStyle="danger">Delete Project</Button>
+                        </Col>
+                        <Col xs={12} md={11}>
                             <Tabs defaultActiveKey={1} id="uncontrolled-tab-example">
                                 <Tab eventKey={1} title="Estimate Configuration">
                                     <Row className="show-grid">
                                         <Col xs={6} md={3}>
-                                            <Button onClick={this.resetEstimates.bind(this)}>Reset Estimates</Button>
+                                            <Button onClick={this.resetProject.bind(this)}>Reset Project</Button>
                                         </Col>
                                     </Row>
                                     <br/>
@@ -336,13 +420,23 @@ class App extends Component {
                                         <Col xs={12}>
                                             <FormGroup controlId="formHorizontalText">
                                                 <Col componentClass={ControlLabel} sm={2}>
+                                                    Project Name
+                                                </Col>
+                                                <Col sm={10}>
+                                                    <FormControl value={this.state.projects[this.state.selected].name} type="text"
+                                                                 placeholder="Project Name"
+                                                                 onChange={this.changeName.bind(this)}/>
+                                                </Col>
+                                            </FormGroup>
+                                            <FormGroup controlId="formHorizontalText">
+                                                <Col componentClass={ControlLabel} sm={2}>
                                                     Project Configuration
                                                 </Col>
                                                 <Col sm={10}>
-                                                    <Checkbox checked={this.state.includeRepositorySetup}
+                                                    <Checkbox checked={this.state.projects[this.state.selected].includeRepositorySetup}
                                                               onChange={this.checkboxClicked.bind(this, 'includeRepositorySetup')}>Include
                                                         Repository Setup?</Checkbox>
-                                                    <Checkbox checked={this.state.includeLearningExistingCode}
+                                                    <Checkbox checked={this.state.projects[this.state.selected].includeLearningExistingCode}
                                                               onChange={this.checkboxClicked.bind(this, 'includeLearningExistingCode')}>Include
                                                         learning existing codebase?</Checkbox>
                                                 </Col>
@@ -370,14 +464,15 @@ class App extends Component {
                                             <Button onClick={this.addGroup.bind(this)}>Add Group</Button>
                                         </Col>
                                         <Col xs={6} md={3}>
-                                            <Button onClick={this.addUserInterfaceEstimate.bind(this)}>Add User Interface</Button>
+                                            <Button onClick={this.addUserInterfaceEstimate.bind(this)}>Add User
+                                                Interface</Button>
                                         </Col>
                                     </Row>
                                     <Row className="estimate-tree">
                                         <Col xs={12}>
                                             <div style={{"height": "1500px"}}>
                                                 <SortableTree
-                                                    treeData={this.state.estimates}
+                                                    treeData={this.state.projects[this.state.selected].estimates}
                                                     onChange={estimates => this.setState({estimates}, this.saveState.bind(this))}
                                                     rowHeight={(data) => this.getHeightForEstimate(data.node)}
                                                     isVirtualized={false}
@@ -432,9 +527,10 @@ class App extends Component {
                                             </thead>
                                             <tbody>
                                             {
-                                                this.createVisualList().map((task, index) => <VisualProposalTask task={task}
-                                                                                                           index={index}
-                                                                                                           key={task.taskNumber}/>)
+                                                this.createVisualList().map((task, index) => <VisualProposalTask
+                                                    task={task}
+                                                    index={index}
+                                                    key={task.taskNumber}/>)
                                             }
                                             </tbody>
                                         </Table>

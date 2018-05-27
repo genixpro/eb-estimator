@@ -25,7 +25,7 @@ class CustomEstimateConfiguration extends Component {
                 type: 'feature',
                 title: " ",
                 hours: 0,
-                groups: []
+                children: []
             })
         }
     }

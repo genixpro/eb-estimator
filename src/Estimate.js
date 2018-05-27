@@ -710,7 +710,8 @@ class Estimate {
                     type: task.type,
                     title: task.title,
                     hours: Number(task.hours),
-                    description: task.description
+                    description: task.description,
+                    children: []
                 };
             }));
 
