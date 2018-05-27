@@ -6,6 +6,7 @@ import DataAnnotationEstimateConfiguration from "./DataAnnotationEstimateConfigu
 import CustomEstimateConfiguration from "./CustomEstimateConfiguration";
 import RPAEstimateConfiguration from "./RPAEstimateConfiguration";
 import EstimateGroupConfiguration from "./EstimateGroupConfiguration";
+import UserInterfaceEstimateConfiguration from "./UserInterfaceEstimateConfiguration";
 
 class EstimateConfiguration extends Component {
 
@@ -64,6 +65,11 @@ class EstimateConfiguration extends Component {
                         this.props.estimate.type === 'rpa' ?
                             <RPAEstimateConfiguration estimate={this.props.estimate} index={this.props.index} onChange={this.props.onChange}>
                             </RPAEstimateConfiguration> : null
+                    }
+                    {
+                        this.props.estimate.type === 'user_interface' ?
+                            <UserInterfaceEstimateConfiguration estimate={this.props.estimate} index={this.props.index} onChange={this.props.onChange}>
+                            </UserInterfaceEstimateConfiguration> : null
                     }
                 </Col>
                 <Col xs={4} md={2}>

@@ -15,6 +15,7 @@ import {
 } from 'react-bootstrap';
 import EstimateConfiguration from './EstimateConfiguration.jsx';
 import ProposalTask from './ProposalTask.jsx';
+import VisualProposalTask from "./VisualProposalTask";
 import Estimate from './Estimate';
 import clone from 'clone';
 
@@ -132,6 +133,23 @@ class App extends Component {
         this.setState({estimates: estimates}, this.saveState.bind(this));
     }
 
+    addUserInterfaceEstimate() {
+        const newEstimate = {
+            key: this.nextEstimateKey(),
+            type: "user_interface",
+            title: "User Interface",
+            components: [{
+                type: "component",
+                title: "New Task",
+                hours: 0,
+                groups: []
+            }],
+            children: []
+        };
+        const estimates = this.state.estimates.concat([newEstimate]);
+        this.setState({estimates: estimates}, this.saveState.bind(this));
+    }
+
 
     resetEstimates() {
         window.bootbox.confirm("Are you sure you want to reset your estimates? You will lose everything.", (result) => {
@@ -142,7 +160,6 @@ class App extends Component {
     }
 
     deleteEstimate(path) {
-        console.log(path);
         this.setState(state => ({
             estimates: removeNodeAtPath({
                 treeData: state.estimates,
@@ -167,28 +184,31 @@ class App extends Component {
         const tasks = [];
 
         if (this.state.includeRepositorySetup || this.state.includeLearningExistingCode) {
-            tasks.push({
+            const projectSetup = {
                 type: "task",
                 title: "Project Setup",
                 hours: null,
-                groups: ['project_setup']
-            });
+                children: []
+            };
+
+
+            tasks.push(projectSetup);
 
             if (this.state.includeRepositorySetup) {
-                tasks.push({
+                projectSetup.children.push({
                     type: "task",
                     title: "Create repository, project trackers and do initial project setup",
                     hours: 2,
-                    groups: ['project_setup']
+                    children: []
                 });
             }
 
             if (this.state.includeLearningExistingCode) {
-                tasks.push({
+                projectSetup.children.push({
                     type: "task",
                     title: "Spend time reviewing and studying the existing code-base",
                     hours: 16,
-                    groups: ['project_setup']
+                    children: []
                 });
             }
         }
@@ -210,7 +230,7 @@ class App extends Component {
 
         tasks = tasks.map(clone);
 
-        console.log(tasks);
+        console.log(JSON.stringify(tasks, null, 1));
 
         // Validate all of the tasks being output
         tasks.forEach((task) => {
@@ -222,62 +242,43 @@ class App extends Component {
             }
         });
 
-        function getTaskKeys(task) {
-            let key = "";
-            let keys = [];
-            let groups = task.groups;
-            if (task.hours !== null) {
-                groups.push('final');
-            }
-            task.groups.forEach((group) => {
-                if (key) {
-                    key += '.';
-                }
-                key += group;
-                keys.push(key);
+        // Now we assign the task-numbers
+        const assignNumbers = (tasks, path) =>
+        {
+            tasks.forEach((task, index) =>
+            {
+                const fullPath = path.concat([index]);
+                task.taskNumber = fullPath.map((index) => (index + 1).toString()).join(".");
+                assignNumbers(task.children, fullPath);
             });
-            return keys;
-        }
+        };
+        assignNumbers(tasks, []);
 
-        // Now collect all the groupings at each level
-        const groupIds = {};
-        const counts = {};
-        tasks.forEach((task, index) => {
-            let taskNumber = "";
-            const keys = getTaskKeys(task);
+        // Now we flatten
+        const allTasks = [];
+        const flattenTask = (task) =>
+        {
+            allTasks.push(task);
+            task.children.forEach((child) => flattenTask(child));
+        };
+        tasks.map(flattenTask);
 
-            keys.forEach((key, keyIndex) => {
-                if (taskNumber) {
-                    taskNumber += '.';
-                }
+        return allTasks;
+    }
 
-                if (groupIds[key]) {
-                    taskNumber += groupIds[key];
-                }
-                else if (keyIndex === 0) {
-                    if (!counts[""])
-                        counts[""] = 0;
-                    counts[""] += 1;
-                    groupIds[key] = counts[""].toString();
-                    taskNumber += counts[""].toString();
-                }
-                else {
-                    if (!counts[keys[keyIndex - 1]])
-                        counts[keys[keyIndex - 1]] = 0;
-                    counts[keys[keyIndex - 1]] += 1;
+    createVisualList() {
+        const tasks = this.createTaskList();
 
-                    if (task.hours === null) {
-                        groupIds[key] = counts[keys[keyIndex - 1]].toString();
-                    }
+        const visualTasks = [];
 
-                    taskNumber += counts[keys[keyIndex - 1]].toString();
-                }
-            });
-
-            task.taskNumber = taskNumber;
+        tasks.forEach((task) => {
+           if (task.image)
+           {
+               visualTasks.push(task);
+           }
         });
 
-        return tasks;
+        return visualTasks;
     }
 
     getHeightForEstimate(estimate) {
@@ -296,6 +297,21 @@ class App extends Component {
         if (estimate.type === 'rpa') {
             return 700;
         }
+        if (estimate.type === 'user_interface') {
+            let base = 700;
+
+            // Add in the heights for each mockup
+            estimate.components.forEach((component) => {
+                if (component.mockup) {
+                    const elem = document.createElement("img");
+                    elem.setAttribute("src", component.mockup);
+                    // console.log(elem.getBoundingClientRect().height);
+                    base += Math.min(200,  elem.naturalHeight);
+                }
+            });
+
+            return base;
+        }
         return 200;
     }
 
@@ -305,7 +321,7 @@ class App extends Component {
                 <header className="App-header">
                     <h1 className="App-title">Electric Brain Product Estimator</h1>
                 </header>
-                <Grid>
+                <Grid fluid={true}>
                     <Row className="show-grid">
                         <Col xs={12}>
                             <Tabs defaultActiveKey={1} id="uncontrolled-tab-example">
@@ -353,6 +369,9 @@ class App extends Component {
                                         <Col xs={6} md={3}>
                                             <Button onClick={this.addGroup.bind(this)}>Add Group</Button>
                                         </Col>
+                                        <Col xs={6} md={3}>
+                                            <Button onClick={this.addUserInterfaceEstimate.bind(this)}>Add User Interface</Button>
+                                        </Col>
                                     </Row>
                                     <Row className="estimate-tree">
                                         <Col xs={12}>
@@ -379,7 +398,7 @@ class App extends Component {
                                         </Col>
                                     </Row>
                                 </Tab>
-                                <Tab eventKey={2} title="Proposal">
+                                <Tab eventKey={2} title="Reference">
                                     <Grid>
                                         <Table>
                                             <thead>
@@ -400,7 +419,28 @@ class App extends Component {
                                         </Table>
                                     </Grid>
                                 </Tab>
-                                <Tab eventKey={3} title="RFP">
+                                <Tab eventKey={3} title="Visual Reference">
+                                    <Grid>
+                                        <Table>
+                                            <thead>
+                                            <tr>
+                                                <td>Number</td>
+                                                <td>Name</td>
+                                                <td>Hours</td>
+                                                <td>Image</td>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {
+                                                this.createVisualList().map((task, index) => <VisualProposalTask task={task}
+                                                                                                           index={index}
+                                                                                                           key={task.taskNumber}/>)
+                                            }
+                                            </tbody>
+                                        </Table>
+                                    </Grid>
+                                </Tab>
+                                <Tab eventKey={4} title="RFP">
                                     <Grid>
                                         <Row className="show-grid">
                                             <Col xs={12} md={8}>

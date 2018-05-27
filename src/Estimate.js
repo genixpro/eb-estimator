@@ -17,15 +17,16 @@ const tasksSchema = {
             type: "string",
             enum: ['component', 'script', 'feature', 'function', 'task', 'document']
         },
-        "groups": {
+        "image": {
+            type: "string"
+        },
+        "children": {
             type: "array",
-            items: {
-                type: "string"
-            }
+            items: {$ref: "#/"}
         },
     },
     additionalProperties: false,
-    required: ['title', 'hours', 'type', 'groups']
+    required: ['title', 'hours', 'type', 'children']
 };
 const validateTaskData = ajv.compile(tasksSchema);
 
@@ -138,10 +139,37 @@ const estimateSchema = {
                         }
                     },
                     additionalProperties: false
+                },
+                {
+                    $ref: "#/definitions/EstimateBase",
+                    properties: {
+                        "type": {
+                            type: "string",
+                            const: "user_interface"
+                        },
+                        "components": {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    "title": {type: "string"},
+                                    "hours": {type: ["number", "null"]},
+                                    "type": {
+                                        type: "string",
+                                        enum: ['component', 'script', 'feature', 'function', 'task', 'document']
+                                    },
+                                    "mockup": {type: "string"},
+                                },
+                                additionalProperties: false,
+                                required: ['title', 'hours', 'type', 'mockup']
+                            }
+                        }
+                    }
                 }
             ]
         }
-    }
+    },
+    // $ref: "#/definitions/Estimate"
 };
 const validateEstimateData = ajv.compile(estimateSchema);
 
@@ -208,288 +236,300 @@ class Estimate {
                 computePowerMultiplier += 5;
             }
 
-            tasks.push({
+            const dataPrep = {
                 type: "component",
                 title: "Data Preparation Pipeline",
                 hours: null,
-                groups: groups.concat(['data_preparation'])
-            });
+                children: []
+            };
+
+            tasks.push(dataPrep);
 
 
             // Create the various tasks
             if (this.convert_existing_data) {
-                tasks.push({
+                dataPrep.children.push({
                     type: "script",
                     title: "Convert existing data into usable training data",
                     hours: 5 * humanTimeMultiplier,
-                    groups: groups.concat(['data_preparation'])
+                    children: []
                 })
             }
 
             if (this.custom_word_embeddings) {
-                tasks.push({
+                dataPrep.children.push({
                     type: "script",
                     title: "Train custom word-vector model using fastText",
                     hours: 8,
-                    groups: groups.concat(['data_preparation'])
+                    children: []
                 })
             }
 
-            tasks.push({
+            const prepScriptTask = {
                 type: "script",
                 title: "Prepare training data into Tensorflow format",
                 hours: null,
-                groups: groups.concat(['data_preparation', 'preparation_script'])
-            });
+                children: []
+            };
+
+            dataPrep.children.push(prepScriptTask);
 
             if (this.text) {
-                tasks.push({
+                prepScriptTask.children.push({
                     type: "feature",
                     title: "Include fast-text pretrained word embeddings as a feature for each word",
                     hours: 4,
-                    groups: groups.concat(['data_preparation', 'preparation_script'])
+                    children: []
                 });
             }
 
             if (this.custom_word_embeddings) {
-                tasks.push({
+                prepScriptTask.children.push({
                     type: "feature",
                     title: "Include the custom word embeddings as a feature for each word",
                     hours: 4,
-                    groups: groups.concat(['data_preparation', 'preparation_script'])
+                    children: []
                 });
             }
 
             if (this.word_positioning) {
-                tasks.push({
+                prepScriptTask.children.push({
                     type: "feature",
                     title: "Include word positioning, such as width, height, x and y as a feature for each word.",
                     hours: 24,
-                    groups: groups.concat(['data_preparation', 'preparation_script'])
+                    children: []
                 });
             }
 
             if (this.part_of_speech) {
-                tasks.push({
+                prepScriptTask.children.push({
                     type: "feature",
                     title: "Include part of speech, (e.g. noun, verb, preposition, adjective, etc...) as a feature",
                     hours: 12,
-                    groups: groups.concat(['data_preparation', 'preparation_script'])
+                    children: []
                 });
             }
 
             if (this.word_dependencies) {
-                tasks.push({
+                prepScriptTask.children.push({
                     type: "feature",
                     title: "Include dependent words (e.g. this noun applies to this verb) as features.",
                     hours: 12,
-                    groups: groups.concat(['data_preparation', 'preparation_script'])
+                    children: []
                 });
             }
 
-            tasks.push({
+            prepScriptTask.children.push({
                 type: "feature",
                 title: "Serialize the dataset into TFRecords files",
                 hours: 4,
-                groups: groups.concat(['data_preparation', 'preparation_script'])
+                children: []
             });
 
-            tasks.push({
+            prepScriptTask.children.push({
                 type: "feature",
                 title: "Break the dataset up into training, testing, and validation sets.",
                 hours: 4,
-                groups: groups.concat(['data_preparation', 'preparation_script'])
+                children: []
             });
 
-            tasks.push({
+            const trainingScripts = {
                 type: "component",
                 title: "Deep Learning Scripts",
                 hours: null,
-                groups: groups.concat(['neural_network'])
-            });
+                children: []
+            };
 
-            tasks.push({
+            dataPrep.children.push(trainingScripts);
+
+            trainingScripts.children.push({
                 type: "script",
                 title: "Create a script to train a single neural network",
                 hours: null,
-                groups: groups.concat(['neural_network', 'training_script'])
+                children: []
             });
 
-            tasks.push({
+            trainingScripts.children.push({
                 type: "feature",
                 title: "Base neural network architecture, with hooks to change alter hyper-parameters with command line parameters",
                 hours: 4 * humanTimeMultiplier,
-                groups: groups.concat(['neural_network', 'training_script'])
+                children: []
             });
 
-            tasks.push({
+            trainingScripts.children.push({
                 type: "feature",
                 title: "Ability to 'name' a neural network to assist with experimentation",
                 hours: 1,
-                groups: groups.concat(['neural_network', 'training_script'])
+                children: []
             });
 
-            tasks.push({
+            trainingScripts.children.push({
                 type: "feature",
                 title: "Input dataset using Tensorflow 'datasets' API",
                 hours: humanTimeMultiplier,
-                groups: groups.concat(['neural_network', 'training_script'])
+                children: []
             });
 
-            tasks.push({
+            trainingScripts.children.push({
                 type: "feature",
                 title: "Core training loop, including measuring training & testing accuracy",
                 hours: 1.5 * humanTimeMultiplier,
-                groups: groups.concat(['neural_network', 'training_script'])
+                children: []
             });
 
-            tasks.push({
+            trainingScripts.children.push({
                 type: "feature",
                 title: "Output training & testing accuracy as Tensorflow 'summary' objects which can be viewed within Tensorboard",
                 hours: 2,
-                groups: groups.concat(['neural_network', 'training_script'])
+                children: []
             });
 
-            tasks.push({
+            trainingScripts.children.push({
                 type: "feature",
                 title: "Output a CSV file showing testing accuracy, training accuracy, loss, etc.. after each 100 iterations of the neural network",
                 hours: 2,
-                groups: groups.concat(['neural_network', 'training_script'])
+                children: []
             });
 
-            tasks.push({
+            trainingScripts.children.push({
                 type: "feature",
                 title: "Save checkpoints of the neural network every 5,000 iterations",
                 hours: 1,
-                groups: groups.concat(['neural_network', 'training_script'])
+                children: []
             });
 
-            tasks.push({
+            trainingScripts.children.push({
                 type: "feature",
                 title: "Output a log file containing all standard output",
                 hours: 1,
-                groups: groups.concat(['neural_network', 'training_script'])
+                children: []
             });
 
             if (this.confusion_matrix) {
-                tasks.push({
+                trainingScripts.children.push({
                     type: "feature",
                     title: "Compute two confusion matrixes, (training & testing), and output them as PNG files",
                     hours: 3 * humanTimeMultiplier,
-                    groups: groups.concat(['neural_network', 'training_script'])
+                    children: []
                 });
             }
 
             if (this.roc_curve) {
-                tasks.push({
+                trainingScripts.children.push({
                     type: "feature",
                     title: "Compute two ROC curves (training & testing), and output them as PNG files",
                     hours: 3 * humanTimeMultiplier,
-                    groups: groups.concat(['neural_network', 'training_script'])
+                    children: []
                 });
             }
 
             if (this.worst_samples) {
-                tasks.push({
+                trainingScripts.children.push({
                     type: "feature",
                     title: "Output a list of the bottom worst 50 samples, so that they can be manually reviewed",
                     hours: 1 * humanTimeMultiplier,
-                    groups: groups.concat(['neural_network', 'training_script'])
+                    children: []
                 });
             }
 
-            tasks.push({
+            const retestScriptTask = {
                 type: "script",
                 title: "Create a script to retest a saved checkpoint from a neural network",
                 hours: null,
-                groups: groups.concat(['neural_network', 'retest_script'])
-            });
+                children: []
+            };
 
-            tasks.push({
+            tasks.push(retestScriptTask);
+
+            retestScriptTask.children.push({
                 type: "feature",
                 title: "Load checkpoint",
                 hours: 2,
-                groups: groups.concat(['neural_network', 'retest_script'])
+                children: []
             });
 
-            tasks.push({
+            retestScriptTask.children.push({
                 type: "feature",
                 title: "Recompute testing accuracy",
                 hours: 0.4 * humanTimeMultiplier,
-                groups: groups.concat(['neural_network', 'retest_script'])
+                children: []
             });
 
             const metrics = ['accuracy'];
             if (this.confusion_matrix) {
-                tasks.push({
+                retestScriptTask.children.push({
                     type: "feature",
                     title: "Recompute confusion matrix",
                     hours: 0.4 * humanTimeMultiplier,
-                    groups: groups.concat(['neural_network', 'retest_script'])
+                    children: []
                 });
                 metrics.push('confusion matrix');
             }
 
             if (this.roc_curve) {
-                tasks.push({
+                retestScriptTask.children.push({
                     type: "feature",
                     title: "Recompute ROC curve",
                     hours: 0.4 * humanTimeMultiplier,
-                    groups: groups.concat(['neural_network', 'retest_script'])
+                    children: []
                 });
                 metrics.push('ROC curve');
             }
 
             if (this.worst_samples) {
-                tasks.push({
+                retestScriptTask.children.push({
                     type: "feature",
                     title: "Recompute 50 worst testing samples",
                     hours: 0.4 * humanTimeMultiplier,
-                    groups: groups.concat(['neural_network', 'retest_script'])
+                    children: []
                 });
                 metrics.push('50 worst samples');
             }
 
-            tasks.push({
+            retestScriptTask.children.push({
                 type: "feature",
                 title: `Compute metrics (${metrics.join(', ')}) for the Validation set`,
                 hours: 2,
-                groups: groups.concat(['neural_network', 'retest_script'])
+                children: []
             });
 
-            tasks.push({
+            const hyperoptScriptTask = {
                 type: "script",
                 title: "Script to optimize the neural network with Hyperopt",
                 hours: null,
-                groups: groups.concat(['neural_network', 'hyperopt_script'])
-            });
+                children: []
+            };
 
-            tasks.push({
+            tasks.push(hyperoptScriptTask);
+
+            hyperoptScriptTask.children.push({
                 type: "feature",
                 title: "Basic script for local hyper parameter optimization",
                 hours: 2 * humanTimeMultiplier,
-                groups: groups.concat(['neural_network', 'hyperopt_script'])
+                children: []
             });
 
-            tasks.push({
+            hyperoptScriptTask.children.push({
                 type: "feature",
                 title: "Allow distributing hyperopt across the network, using Hyperopt's builtin functionality",
                 hours: 2,
-                groups: groups.concat(['neural_network', 'hyperopt_script'])
+                children: []
             });
 
-            tasks.push({
+            const researchTask = {
                 type: "task",
                 title: "Experiment with core deep-neural network",
                 hours: null,
-                groups: groups.concat(['research'])
-            });
+                children: []
+            };
 
-            tasks.push({
+            tasks.push(researchTask);
+
+            researchTask.children.push({
                 type: "task",
                 title: "Setup a bunch of deep-learning enabled GPU servers in order to do research on",
                 hours: 2 * humanTimeMultiplier,
-                groups: groups.concat(['research'])
+                children: []
             });
 
 
@@ -513,11 +553,11 @@ class Estimate {
                 numberOfExperiments = 150;
             }
 
-            tasks.push({
+            researchTask.children.push({
                 type: "task",
                 title: "Run experiments with various hyper-parameter configurations in order to optimize accuracy",
                 hours: humanTimePerExperiment * numberOfExperiments,
-                groups: groups.concat(['research'])
+                children: []
             });
 
             expenses.push({
@@ -525,109 +565,113 @@ class Estimate {
                 cost: numberOfExperiments * (machineTimePerExperiment + machineTimePerExperimentContingency) * machineTimeCostPerHour,
             });
 
-            tasks.push({
+            const deploymentTask = {
                 type: "task",
                 title: "Deployment",
                 hours: null,
-                groups: groups.concat(['deployment'])
-            });
+                children: []
+            };
 
-            tasks.push({
+            tasks.push(deploymentTask);
+
+            deploymentTask.children.push({
                 type: "component",
                 title: "Create a Python API server which serves the neural network model",
                 hours: 5 * humanTimeMultiplier,
-                groups: groups.concat(['deployment'])
+                children: []
             });
 
-            tasks.push({
+            deploymentTask.children.push({
                 type: "task",
                 title: "Create Python setuptools configuration for API server",
                 hours: 2,
-                groups: groups.concat(['deployment'])
+                children: []
             });
 
-            tasks.push({
+            deploymentTask.children.push({
                 type: "script",
                 title: "Shell script to install all the dependencies of the API server",
                 hours: 4,
-                groups: groups.concat(['deployment'])
+                children: []
             });
 
-            tasks.push({
+            deploymentTask.children.push({
                 type: "document",
                 title: "Documentation describing the front-facing endpoints of the API server, to be used by people consuming the API",
                 hours: 4 * humanTimeMultiplier,
-                groups: groups.concat(['deployment'])
+                children: []
             });
         }
 
         if (this.type === 'rpa') {
             if (this.vendor_selection) {
-                tasks.push({
+                const vendorSelection = {
                     type: "task",
                     title: "RPA Vendor Selection",
                     hours: null,
-                    groups: groups.concat(['vendor_selection'])
-                });
+                    children: []
+                };
 
-                tasks.push({
+                tasks.push(vendorSelection);
+
+                vendorSelection.children.push({
                     type: "task",
                     title: "Initial technical discovery session",
-                    hours: 4,
-                    groups: groups.concat(['vendor_selection'])
+                    hours: 4
                 });
 
-                tasks.push({
+                vendorSelection.children.push({
                     type: "task",
                     title: "Preparation of pro/con sheets on compatible vendors",
-                    hours: 10,
-                    groups: groups.concat(['vendor_selection'])
+                    hours: 10
                 });
 
-                tasks.push({
+                vendorSelection.children.push({
                     type: "task",
                     title: "Vendor selection session with team",
-                    hours: 2,
-                    groups: groups.concat(['vendor_selection'])
+                    hours: 2
                 });
             }
 
             if (this.deployment_configuration) {
-                tasks.push({
+                const deploymentTask = {
                     type: "task",
                     title: "RPA Deployment Configuration",
                     hours: null,
-                    groups: groups.concat(['deployment_configuration'])
-                });
+                    children: []
+                };
 
-                tasks.push({
+                tasks.push(deploymentTask);
+
+                deploymentTask.children.push({
                     type: "task",
                     title: "Go through security protocols to get team access to servers",
                     hours: 8,
-                    groups: groups.concat(['deployment_configuration'])
+                    children: []
                 });
 
-                tasks.push({
+                deploymentTask.children.push({
                     type: "task",
                     title: "Configure the central RPA bot software and cluster",
                     hours: 40,
-                    groups: groups.concat(['deployment_configuration'])
+                    children: []
                 });
             }
 
             this.processes.forEach((process) => {
                 if (process.name.trim()) {
-                    tasks.push({
+                    const processTask = {
                         type: "component",
                         title: process.name,
                         hours: null,
-                        groups: groups.concat(['rpa-' + process.name])
-                    });
-                    tasks.push({
+                        children: []
+                    };
+
+                    processTask.children.push({
                         type: "component",
                         title: "Job shadowing of person performing the process",
                         hours: 2,
-                        groups: groups.concat(['rpa-' + process.name])
+                        children: []
                     });
 
                     // Calculate how long we expect to be configuring this process within the RPA tool
@@ -636,25 +680,25 @@ class Estimate {
                     const totalStepConfigTime = process.steps * configHoursPerStep;
                     const totalStepFieldTestingTime = process.steps * fieldTestingHoursPerStep;
 
-                    tasks.push({
+                    processTask.children.push({
                         type: "task",
                         title: "Initial configuration of the process steps within the RPA tool",
                         hours: Math.ceil(8 + totalStepConfigTime),
-                        groups: groups.concat(['rpa-' + process.name])
+                        children: []
                     });
 
-                    tasks.push({
+                    processTask.children.push({
                         type: "task",
                         title: "Process field testing with operations team and refinement",
                         hours: Math.ceil(2 + totalStepFieldTestingTime),
-                        groups: groups.concat(['rpa-' + process.name])
+                        children: []
                     });
 
-                    tasks.push({
+                    processTask.children.push({
                         type: "task",
                         title: "Integration of RPA process into other company systems",
                         hours: 8,
-                        groups: groups.concat(['rpa-' + process.name])
+                        children: []
                     });
                 }
             });
@@ -666,8 +710,25 @@ class Estimate {
                     type: task.type,
                     title: task.title,
                     hours: Number(task.hours),
-                    description: task.description,
-                    groups: groups,
+                    description: task.description
+                };
+            }));
+
+            // The last item in the task list is often a blank one, so remove it if needed
+            if (!tasks[tasks.length - 1].title.trim()) {
+                tasks.pop();
+            }
+        }
+
+        if (this.type === 'user_interface') {
+            tasks = tasks.concat(this.components.map((component) => {
+                return {
+                    type: component.type,
+                    title: component.title,
+                    hours: Number(component.hours),
+                    description: "",
+                    children: [],
+                    image: component.mockup
                 };
             }));
 
@@ -679,26 +740,44 @@ class Estimate {
 
         if(this.type === 'group')
         {
+            let children = [];
+
+            // Add in all the tasks for sub estimates along-side this ones task
+            this.children.forEach((child, index) =>
+            {
+                const childEstimate = new Estimate(child, index);
+                const childGroups = groups.concat([this.key]);
+                const childResult = childEstimate.createTasksAndExpenses(childGroups);
+                const childTasks = childResult.tasks;
+                const childExpenses = childResult.expenses;
+                children = children.concat(childTasks);
+                expenses = expenses.concat(childExpenses);
+            });
+
+
+            // Add in all sub-estimates as children
             tasks = tasks.concat({
                 type: "component",
                 title: this.title,
                 hours: null,
                 description: "",
-                groups: groups.concat([this.key]),
+                children: children
             });
         }
-
-        // Add in all the tasks for sub estimates
-        this.children.forEach((child, index) =>
+        else
         {
-            const childEstimate = new Estimate(child, index);
-            const childGroups = groups.concat([this.key]);
-            const childResult = childEstimate.createTasksAndExpenses(childGroups);
-            const childTasks = childResult.tasks;
-            const childExpenses = childResult.expenses;
-            tasks = tasks.concat(childTasks);
-            expenses = expenses.concat(childExpenses);
-        });
+            // Add in all the tasks for sub estimates along-side this ones task
+            this.children.forEach((child, index) =>
+            {
+                const childEstimate = new Estimate(child, index);
+                const childGroups = groups.concat([this.key]);
+                const childResult = childEstimate.createTasksAndExpenses(childGroups);
+                const childTasks = childResult.tasks;
+                const childExpenses = childResult.expenses;
+                tasks = tasks.concat(childTasks);
+                expenses = expenses.concat(childExpenses);
+            });
+        }
 
         // Validate all of the expenses being output
         // TODO: Move to app.jsx
@@ -714,10 +793,24 @@ class Estimate {
         return {tasks, expenses};
     }
 
-    calculateHours() {
+    walkAllTasks(callback)
+    {
         const tasks = this.createTasksAndExpenses([]).tasks;
+
+        const recurse = (tasks) =>
+        {
+            tasks.forEach((task) =>
+            {
+                callback(task);
+                recurse(task.children);
+            });
+        };
+        recurse(tasks);
+    }
+
+    calculateHours() {
         let totalHours = 0;
-        tasks.forEach((task) => {
+        this.walkAllTasks((task) => {
             totalHours += task.hours;
         });
         return totalHours;
