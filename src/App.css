@@ -32,3 +32,19 @@
 {
   clear: both;
 }
+
+.estimate-tree .rst__nodeContent
+{
+  width: 96%;
+}
+
+.estimate-tree .rst__rowLabel
+{
+  flex: 1 1 auto;
+}
+
+.estimate-tree .rst__rowContents
+{
+  padding-top: 10px;
+  align-items: flex-start;
+}

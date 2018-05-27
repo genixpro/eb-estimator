@@ -26,39 +26,22 @@ class DeepLearningEstimateConfiguration extends Component {
         this.props.onChange(estimate);
     }
 
-    changeName(event) {
-        const estimate = this.props.estimate;
-        estimate.name = event.target.value;
-        this.props.onChange(this.props.estimate);
-    }
-
     render() {
         return (
             <div>
                 <h3>Deep Learning Estimate</h3>
-
-                <Form horizontal>
-                    <FormGroup controlId="formHorizontalText">
-                        <Col componentClass={ControlLabel} sm={2}>
-                            Name of group
-                        </Col>
-                        <Col sm={10}>
-                            <FormControl value={this.props.estimate.name} type="text" placeholder="The name of this group" onChange={this.changeName.bind(this)}/>
-                        </Col>
-                    </FormGroup>
-                </Form>
 
                 <FormGroup controlId="formHorizontalText">
                     <Col componentClass={ControlLabel} sm={2}>
                         Data Types
                     </Col>
                     <Col sm={10}>
-                        <Checkbox inline value={this.props.estimate['structured']} onChange={this.checkboxClicked.bind(this, 'structured')}>Structured Data</Checkbox>
-                        <Checkbox inline value={this.props.estimate['text']} onChange={this.checkboxClicked.bind(this, 'text')}>Text</Checkbox>
-                        <Checkbox inline value={this.props.estimate['image']} onChange={this.checkboxClicked.bind(this, 'image')}>Images</Checkbox>
-                        <Checkbox inline value={this.props.estimate['audio']} onChange={this.checkboxClicked.bind(this, 'audio')}>Audio</Checkbox>
-                        <Checkbox inline value={this.props.estimate['video']} onChange={this.checkboxClicked.bind(this, 'video')}>Video</Checkbox>
-                        <Checkbox inline value={this.props.estimate['other']} onChange={this.checkboxClicked.bind(this, 'other')}>Other</Checkbox>
+                        <Checkbox inline checked={this.props.estimate['structured']} onChange={this.checkboxClicked.bind(this, 'structured')}>Structured Data</Checkbox>
+                        <Checkbox inline checked={this.props.estimate['text']} onChange={this.checkboxClicked.bind(this, 'text')}>Text</Checkbox>
+                        <Checkbox inline checked={this.props.estimate['image']} onChange={this.checkboxClicked.bind(this, 'image')}>Images</Checkbox>
+                        <Checkbox inline checked={this.props.estimate['audio']} onChange={this.checkboxClicked.bind(this, 'audio')}>Audio</Checkbox>
+                        <Checkbox inline checked={this.props.estimate['video']} onChange={this.checkboxClicked.bind(this, 'video')}>Video</Checkbox>
+                        <Checkbox inline checked={this.props.estimate['other']} onChange={this.checkboxClicked.bind(this, 'other')}>Other</Checkbox>
                     </Col>
                 </FormGroup>
                 <br/>
@@ -68,27 +51,27 @@ class DeepLearningEstimateConfiguration extends Component {
                         Data Preparation
                     </Col>
                     <Col sm={10}>
-                        <Checkbox value={this.props.estimate['convert_existing_data']} onChange={this.checkboxClicked.bind(this, 'convert_existing_data')}>Do we need a script to convert existing training data into a usable
+                        <Checkbox checked={this.props.estimate['convert_existing_data']} onChange={this.checkboxClicked.bind(this, 'convert_existing_data')}>Do we need a script to convert existing training data into a usable
                             format?</Checkbox>
 
                         {
                             this.props.estimate['text'] ?
-                                <Checkbox value={this.props.estimate['custom_word_embeddings']} onChange={this.checkboxClicked.bind(this, 'custom_word_embeddings')}>Custom word embeddings?</Checkbox>
+                                <Checkbox checked={this.props.estimate['custom_word_embeddings']} onChange={this.checkboxClicked.bind(this, 'custom_word_embeddings')}>Custom word embeddings?</Checkbox>
                                 : null
                         }
                         {
                             this.props.estimate['text'] ?
-                                <Checkbox value={this.props.estimate['word_positioning']} onChange={this.checkboxClicked.bind(this, 'word_positioning')}>Word positioning (height, width)?</Checkbox>
+                                <Checkbox checked={this.props.estimate['word_positioning']} onChange={this.checkboxClicked.bind(this, 'word_positioning')}>Word positioning (height, width)?</Checkbox>
                                 : null
                         }
                         {
                             this.props.estimate['text'] ?
-                                <Checkbox value={this.props.estimate['part_of_speech']} onChange={this.checkboxClicked.bind(this, 'part_of_speech')}>Part-of-speech (e.g. verb/noun/adjective/preposition)?</Checkbox>
+                                <Checkbox checked={this.props.estimate['part_of_speech']} onChange={this.checkboxClicked.bind(this, 'part_of_speech')}>Part-of-speech (e.g. verb/noun/adjective/preposition)?</Checkbox>
                                 : null
                         }
                         {
                             this.props.estimate['text'] ?
-                                <Checkbox value={this.props.estimate['word_dependencies']} onChange={this.checkboxClicked.bind(this, 'word_dependencies')}>Word-dependencies (e.g. this verb applies to this noun)?</Checkbox>
+                                <Checkbox checked={this.props.estimate['word_dependencies']} onChange={this.checkboxClicked.bind(this, 'word_dependencies')}>Word-dependencies (e.g. this verb applies to this noun)?</Checkbox>
                                 : null
                         }
                     </Col>

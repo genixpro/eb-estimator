@@ -12,24 +12,18 @@ class CustomEstimateConfiguration extends Component {
         this.props.onChange(this.props.estimate);
     }
 
-    changeName(event) {
-        const estimate = this.props.estimate;
-        estimate.name = event.target.value;
-        this.props.onChange(this.props.estimate);
-    }
-
     // This function always makes sure there is an empty task at the end of the list.
     ensureEmptyTask(estimate) {
         let isEmptyTask = false;
         for (let task of estimate.tasks) {
-            if (!(task.name.trim())) {
+            if (!(task.title.trim())) {
                 isEmptyTask = true;
             }
         }
         if (!isEmptyTask) {
             estimate.tasks.push({
                 type: 'feature',
-                name: " ",
+                title: " ",
                 hours: 0,
                 groups: []
             })
@@ -91,17 +85,6 @@ class CustomEstimateConfiguration extends Component {
             <div>
                 <h3>Custom Estimate</h3>
 
-                <Form horizontal>
-                    <FormGroup controlId="formHorizontalText">
-                        <Col componentClass={ControlLabel} sm={2}>
-                            Name of group
-                        </Col>
-                        <Col sm={10}>
-                            <FormControl value={this.props.estimate.name} type="text" placeholder="The name of this group of tasks, as shown on the proposal" onChange={this.changeName.bind(this)}/>
-                        </Col>
-                    </FormGroup>
-                </Form>
-
                 <ReactTable
                     data={this.props.estimate.tasks}
                     columns={[
@@ -111,8 +94,8 @@ class CustomEstimateConfiguration extends Component {
                             Cell: this.renderTaskType.bind(this)
                         },
                         {
-                            Header: "Name",
-                            accessor: "name",
+                            Header: "Title",
+                            accessor: "title",
                             Cell: this.renderEditable.bind(this)
                         },
                         {

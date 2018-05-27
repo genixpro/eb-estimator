@@ -9,7 +9,7 @@ const tasksSchema = {
     type: "object",
     properties: {
         "key": {type: "string"},
-        "name": {type: "string"},
+        "title": {type: "string"},
         "hours": {type: ["number", "null"]},
         "description": {type: "string"},
         "taskNumber": {type: "string"}, // This is filled in automatically
@@ -25,7 +25,7 @@ const tasksSchema = {
         },
     },
     additionalProperties: false,
-    required: ['name', 'hours', 'type', 'groups']
+    required: ['title', 'hours', 'type', 'groups']
 };
 const validateTaskData = ajv.compile(tasksSchema);
 
@@ -33,93 +33,115 @@ const validateTaskData = ajv.compile(tasksSchema);
 // The estimates schema - this is a complex object that contains
 // a lot of custom business logic in forming these estimates
 const estimateSchema = {
-    type: "object",
-    oneOf: [
-        {
+    definitions: {
+        EstimateBase: {
             properties: {
                 "key": {type: "string"},
                 "type": {
-                    type: "string",
-                    const: "deep_learning"
+                    type: "string"
                 },
-                "name": {type: "string"},
-                "structured": {type: "boolean"},
-                "text": {type: "boolean"},
-                "image": {type: "boolean"},
-                "audio": {type: "boolean"},
-                "video": {type: "boolean"},
-                "other": {type: "boolean"},
-                "convert_existing_data": {type: "boolean"},
-                "custom_word_embeddings": {type: "boolean"},
-                "word_positioning": {type: "boolean"},
-                "part_of_speech": {type: "boolean"},
-                "word_dependencies": {type: "boolean"},
-                "research_cycle": {
-                    type: "string",
-                    enum: ['minimum', 'small', 'medium', 'large']
-                },
-                "confusion_matrix": {type: "boolean"},
-                "roc_curve": {type: "boolean"},
-                "worst_samples": {type: "boolean"},
-            },
-            additionalProperties: false
-        },
-        {
-            properties: {
-                "key": {type: "string"},
-                "type": {
-                    type: "string",
-                    const: "data_annotation"
-                },
-                "structured": {type: "boolean"},
-                "text": {type: "boolean"},
-                "image": {type: "boolean"},
-                "audio": {type: "boolean"},
-                "video": {type: "boolean"},
-                "other": {type: "boolean"}
-            },
-            additionalProperties: false
-        },
-        {
-            properties: {
-                "key": {type: "string"},
-                "type": {
-                    type: "string",
-                    const: "custom"
-                },
-                "name": {type: "string"},
-                "tasks": {
+                "title": {type: "string"},
+                "children": {
                     type: "array",
-                    items: tasksSchema
+                    items: {$ref: "#/definitions/Estimate"}
                 }
-            },
-            additionalProperties: false
+            }
         },
-        {
-            properties: {
-                "key": {type: "string"},
-                "type": {
-                    type: "string",
-                    const: "rpa"
+        Estimate: {
+            type: "object",
+            oneOf: [
+                {
+                    $ref: "#/definitions/EstimateBase",
+                    properties: {
+                        "type": {
+                            const: "group"
+                        }
+                    },
+                    additionalProperties: false
                 },
-                "name": {type: "string"},
-		"vendor_selection": {type: "boolean"},
-		"deployment_configuration": {type: "boolean"},
-                "processes": {
-                    type: "array",
-                    items: {
-			    type: "object",
-			    properties: {
-				    "name": {type: "string"},
-				    "steps": {type: "number"}
-			    }
+                {
+                    $ref: "#/definitions/EstimateBase",
+                    properties: {
+                        "type": {
+                            const: "deep_learning"
+                        },
+                        "structured": {type: "boolean"},
+                        "text": {type: "boolean"},
+                        "image": {type: "boolean"},
+                        "audio": {type: "boolean"},
+                        "video": {type: "boolean"},
+                        "other": {type: "boolean"},
+                        "convert_existing_data": {type: "boolean"},
+                        "custom_word_embeddings": {type: "boolean"},
+                        "word_positioning": {type: "boolean"},
+                        "part_of_speech": {type: "boolean"},
+                        "word_dependencies": {type: "boolean"},
+                        "research_cycle": {
+                            type: "string",
+                            enum: ['minimum', 'small', 'medium', 'large']
+                        },
+                        "confusion_matrix": {type: "boolean"},
+                        "roc_curve": {type: "boolean"},
+                        "worst_samples": {type: "boolean"},
+                    },
+                    additionalProperties: false
+                },
+                {
+                    $ref: "#/definitions/EstimateBase",
+                    properties: {
+                        "type": {
+                            type: "string",
+                            const: "data_annotation"
+                        },
+                        "structured": {type: "boolean"},
+                        "text": {type: "boolean"},
+                        "image": {type: "boolean"},
+                        "audio": {type: "boolean"},
+                        "video": {type: "boolean"},
+                        "other": {type: "boolean"}
+                    },
+                    additionalProperties: false
+                },
+                {
+                    $ref: "#/definitions/EstimateBase",
+                    properties: {
+                        "type": {
+                            type: "string",
+                            const: "custom"
+                        },
+                        "tasks": {
+                            type: "array",
+                            items: tasksSchema
+                        }
+                    },
+                    additionalProperties: false
+                },
+                {
+                    $ref: "#/definitions/EstimateBase",
+                    properties: {
+                        "type": {
+                            type: "string",
+                            const: "rpa"
+                        },
+                        "vendor_selection": {type: "boolean"},
+                        "deployment_configuration": {type: "boolean"},
+                        "processes": {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    "name": {type: "string"},
+                                    "steps": {type: "number"}
+                                }
 
-		    }
+                            }
+                        }
+                    },
+                    additionalProperties: false
                 }
-            },
-            additionalProperties: false
+            ]
         }
-    ]
+    }
 };
 const validateEstimateData = ajv.compile(estimateSchema);
 
@@ -128,11 +150,11 @@ const validateEstimateData = ajv.compile(estimateSchema);
 const additionalExpensesSchema = {
     type: "object",
     properties: {
-        "name": {type: "string"},
+        "title": {type: "string"},
         "cost": {type: ["number"]},
     },
     additionalProperties: false,
-    required: ['name', 'cost']
+    required: ['title', 'cost']
 };
 const validateExpenseData = ajv.compile(additionalExpensesSchema);
 
@@ -152,19 +174,12 @@ class Estimate {
         this.estimateIndex = index;
     }
 
-    createTasksAndExpenses() {
+    createTasksAndExpenses(groups) {
         let tasks = [];
-        const expenses = [];
-        const groups = [this.key];
+        let expenses = [];
+        groups = groups.concat([]);
 
         if (this.type === 'deep_learning') {
-            // Create the task for this component
-            tasks.push({
-                type: "component",
-                name: this.name,
-                hours: null,
-                groups: groups.concat([])
-            });
 
             let humanTimeMultiplier = 1;
             let computePowerMultiplier = 1;
@@ -195,7 +210,7 @@ class Estimate {
 
             tasks.push({
                 type: "component",
-                name: "Data Preparation Pipeline",
+                title: "Data Preparation Pipeline",
                 hours: null,
                 groups: groups.concat(['data_preparation'])
             });
@@ -205,7 +220,7 @@ class Estimate {
             if (this.convert_existing_data) {
                 tasks.push({
                     type: "script",
-                    name: "Convert existing data into usable training data",
+                    title: "Convert existing data into usable training data",
                     hours: 5 * humanTimeMultiplier,
                     groups: groups.concat(['data_preparation'])
                 })
@@ -214,7 +229,7 @@ class Estimate {
             if (this.custom_word_embeddings) {
                 tasks.push({
                     type: "script",
-                    name: "Train custom word-vector model using fastText",
+                    title: "Train custom word-vector model using fastText",
                     hours: 8,
                     groups: groups.concat(['data_preparation'])
                 })
@@ -222,7 +237,7 @@ class Estimate {
 
             tasks.push({
                 type: "script",
-                name: "Prepare training data into Tensorflow format",
+                title: "Prepare training data into Tensorflow format",
                 hours: null,
                 groups: groups.concat(['data_preparation', 'preparation_script'])
             });
@@ -230,7 +245,7 @@ class Estimate {
             if (this.text) {
                 tasks.push({
                     type: "feature",
-                    name: "Include fast-text pretrained word embeddings as a feature for each word",
+                    title: "Include fast-text pretrained word embeddings as a feature for each word",
                     hours: 4,
                     groups: groups.concat(['data_preparation', 'preparation_script'])
                 });
@@ -239,7 +254,7 @@ class Estimate {
             if (this.custom_word_embeddings) {
                 tasks.push({
                     type: "feature",
-                    name: "Include the custom word embeddings as a feature for each word",
+                    title: "Include the custom word embeddings as a feature for each word",
                     hours: 4,
                     groups: groups.concat(['data_preparation', 'preparation_script'])
                 });
@@ -248,7 +263,7 @@ class Estimate {
             if (this.word_positioning) {
                 tasks.push({
                     type: "feature",
-                    name: "Include word positioning, such as width, height, x and y as a feature for each word.",
+                    title: "Include word positioning, such as width, height, x and y as a feature for each word.",
                     hours: 24,
                     groups: groups.concat(['data_preparation', 'preparation_script'])
                 });
@@ -257,7 +272,7 @@ class Estimate {
             if (this.part_of_speech) {
                 tasks.push({
                     type: "feature",
-                    name: "Include part of speech, (e.g. noun, verb, preposition, adjective, etc...) as a feature",
+                    title: "Include part of speech, (e.g. noun, verb, preposition, adjective, etc...) as a feature",
                     hours: 12,
                     groups: groups.concat(['data_preparation', 'preparation_script'])
                 });
@@ -266,7 +281,7 @@ class Estimate {
             if (this.word_dependencies) {
                 tasks.push({
                     type: "feature",
-                    name: "Include dependent words (e.g. this noun applies to this verb) as features.",
+                    title: "Include dependent words (e.g. this noun applies to this verb) as features.",
                     hours: 12,
                     groups: groups.concat(['data_preparation', 'preparation_script'])
                 });
@@ -274,84 +289,84 @@ class Estimate {
 
             tasks.push({
                 type: "feature",
-                name: "Serialize the dataset into TFRecords files",
+                title: "Serialize the dataset into TFRecords files",
                 hours: 4,
                 groups: groups.concat(['data_preparation', 'preparation_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Break the dataset up into training, testing, and validation sets.",
+                title: "Break the dataset up into training, testing, and validation sets.",
                 hours: 4,
                 groups: groups.concat(['data_preparation', 'preparation_script'])
             });
 
             tasks.push({
                 type: "component",
-                name: "Deep Learning Scripts",
+                title: "Deep Learning Scripts",
                 hours: null,
                 groups: groups.concat(['neural_network'])
             });
 
             tasks.push({
                 type: "script",
-                name: "Create a script to train a single neural network",
+                title: "Create a script to train a single neural network",
                 hours: null,
                 groups: groups.concat(['neural_network', 'training_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Base neural network architecture, with hooks to change alter hyper-parameters with command line parameters",
+                title: "Base neural network architecture, with hooks to change alter hyper-parameters with command line parameters",
                 hours: 4 * humanTimeMultiplier,
                 groups: groups.concat(['neural_network', 'training_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Ability to 'name' a neural network to assist with experimentation",
+                title: "Ability to 'name' a neural network to assist with experimentation",
                 hours: 1,
                 groups: groups.concat(['neural_network', 'training_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Input dataset using Tensorflow 'datasets' API",
+                title: "Input dataset using Tensorflow 'datasets' API",
                 hours: humanTimeMultiplier,
                 groups: groups.concat(['neural_network', 'training_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Core training loop, including measuring training & testing accuracy",
+                title: "Core training loop, including measuring training & testing accuracy",
                 hours: 1.5 * humanTimeMultiplier,
                 groups: groups.concat(['neural_network', 'training_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Output training & testing accuracy as Tensorflow 'summary' objects which can be viewed within Tensorboard",
+                title: "Output training & testing accuracy as Tensorflow 'summary' objects which can be viewed within Tensorboard",
                 hours: 2,
                 groups: groups.concat(['neural_network', 'training_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Output a CSV file showing testing accuracy, training accuracy, loss, etc.. after each 100 iterations of the neural network",
+                title: "Output a CSV file showing testing accuracy, training accuracy, loss, etc.. after each 100 iterations of the neural network",
                 hours: 2,
                 groups: groups.concat(['neural_network', 'training_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Save checkpoints of the neural network every 5,000 iterations",
+                title: "Save checkpoints of the neural network every 5,000 iterations",
                 hours: 1,
                 groups: groups.concat(['neural_network', 'training_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Output a log file containing all standard output",
+                title: "Output a log file containing all standard output",
                 hours: 1,
                 groups: groups.concat(['neural_network', 'training_script'])
             });
@@ -359,7 +374,7 @@ class Estimate {
             if (this.confusion_matrix) {
                 tasks.push({
                     type: "feature",
-                    name: "Compute two confusion matrixes, (training & testing), and output them as PNG files",
+                    title: "Compute two confusion matrixes, (training & testing), and output them as PNG files",
                     hours: 3 * humanTimeMultiplier,
                     groups: groups.concat(['neural_network', 'training_script'])
                 });
@@ -368,7 +383,7 @@ class Estimate {
             if (this.roc_curve) {
                 tasks.push({
                     type: "feature",
-                    name: "Compute two ROC curves (training & testing), and output them as PNG files",
+                    title: "Compute two ROC curves (training & testing), and output them as PNG files",
                     hours: 3 * humanTimeMultiplier,
                     groups: groups.concat(['neural_network', 'training_script'])
                 });
@@ -377,7 +392,7 @@ class Estimate {
             if (this.worst_samples) {
                 tasks.push({
                     type: "feature",
-                    name: "Output a list of the bottom worst 50 samples, so that they can be manually reviewed",
+                    title: "Output a list of the bottom worst 50 samples, so that they can be manually reviewed",
                     hours: 1 * humanTimeMultiplier,
                     groups: groups.concat(['neural_network', 'training_script'])
                 });
@@ -385,21 +400,21 @@ class Estimate {
 
             tasks.push({
                 type: "script",
-                name: "Create a script to retest a saved checkpoint from a neural network",
+                title: "Create a script to retest a saved checkpoint from a neural network",
                 hours: null,
                 groups: groups.concat(['neural_network', 'retest_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Load checkpoint",
+                title: "Load checkpoint",
                 hours: 2,
                 groups: groups.concat(['neural_network', 'retest_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Recompute testing accuracy",
+                title: "Recompute testing accuracy",
                 hours: 0.4 * humanTimeMultiplier,
                 groups: groups.concat(['neural_network', 'retest_script'])
             });
@@ -408,7 +423,7 @@ class Estimate {
             if (this.confusion_matrix) {
                 tasks.push({
                     type: "feature",
-                    name: "Recompute confusion matrix",
+                    title: "Recompute confusion matrix",
                     hours: 0.4 * humanTimeMultiplier,
                     groups: groups.concat(['neural_network', 'retest_script'])
                 });
@@ -418,7 +433,7 @@ class Estimate {
             if (this.roc_curve) {
                 tasks.push({
                     type: "feature",
-                    name: "Recompute ROC curve",
+                    title: "Recompute ROC curve",
                     hours: 0.4 * humanTimeMultiplier,
                     groups: groups.concat(['neural_network', 'retest_script'])
                 });
@@ -428,7 +443,7 @@ class Estimate {
             if (this.worst_samples) {
                 tasks.push({
                     type: "feature",
-                    name: "Recompute 50 worst testing samples",
+                    title: "Recompute 50 worst testing samples",
                     hours: 0.4 * humanTimeMultiplier,
                     groups: groups.concat(['neural_network', 'retest_script'])
                 });
@@ -437,42 +452,42 @@ class Estimate {
 
             tasks.push({
                 type: "feature",
-                name: `Compute metrics (${metrics.join(', ')}) for the Validation set`,
+                title: `Compute metrics (${metrics.join(', ')}) for the Validation set`,
                 hours: 2,
                 groups: groups.concat(['neural_network', 'retest_script'])
             });
 
             tasks.push({
                 type: "script",
-                name: "Script to optimize the neural network with Hyperopt",
+                title: "Script to optimize the neural network with Hyperopt",
                 hours: null,
                 groups: groups.concat(['neural_network', 'hyperopt_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Basic script for local hyper parameter optimization",
+                title: "Basic script for local hyper parameter optimization",
                 hours: 2 * humanTimeMultiplier,
                 groups: groups.concat(['neural_network', 'hyperopt_script'])
             });
 
             tasks.push({
                 type: "feature",
-                name: "Allow distributing hyperopt across the network, using Hyperopt's builtin functionality",
+                title: "Allow distributing hyperopt across the network, using Hyperopt's builtin functionality",
                 hours: 2,
                 groups: groups.concat(['neural_network', 'hyperopt_script'])
             });
 
             tasks.push({
                 type: "task",
-                name: "Experiment with core deep-neural network",
+                title: "Experiment with core deep-neural network",
                 hours: null,
                 groups: groups.concat(['research'])
             });
 
             tasks.push({
                 type: "task",
-                name: "Setup a bunch of deep-learning enabled GPU servers in order to do research on",
+                title: "Setup a bunch of deep-learning enabled GPU servers in order to do research on",
                 hours: 2 * humanTimeMultiplier,
                 groups: groups.concat(['research'])
             });
@@ -500,179 +515,156 @@ class Estimate {
 
             tasks.push({
                 type: "task",
-                name: "Run experiments with various hyper-parameter configurations in order to optimize accuracy",
+                title: "Run experiments with various hyper-parameter configurations in order to optimize accuracy",
                 hours: humanTimePerExperiment * numberOfExperiments,
                 groups: groups.concat(['research'])
             });
 
             expenses.push({
-                name: "Data Preparation Pipeline",
+                title: "Data Preparation Pipeline",
                 cost: numberOfExperiments * (machineTimePerExperiment + machineTimePerExperimentContingency) * machineTimeCostPerHour,
             });
 
             tasks.push({
                 type: "task",
-                name: "Deployment",
+                title: "Deployment",
                 hours: null,
                 groups: groups.concat(['deployment'])
             });
 
             tasks.push({
                 type: "component",
-                name: "Create a Python API server which serves the neural network model",
+                title: "Create a Python API server which serves the neural network model",
                 hours: 5 * humanTimeMultiplier,
                 groups: groups.concat(['deployment'])
             });
 
             tasks.push({
                 type: "task",
-                name: "Create Python setuptools configuration for API server",
+                title: "Create Python setuptools configuration for API server",
                 hours: 2,
                 groups: groups.concat(['deployment'])
             });
 
             tasks.push({
                 type: "script",
-                name: "Shell script to install all the dependencies of the API server",
+                title: "Shell script to install all the dependencies of the API server",
                 hours: 4,
                 groups: groups.concat(['deployment'])
             });
 
             tasks.push({
                 type: "document",
-                name: "Documentation describing the front-facing endpoints of the API server, to be used by people consuming the API",
+                title: "Documentation describing the front-facing endpoints of the API server, to be used by people consuming the API",
                 hours: 4 * humanTimeMultiplier,
                 groups: groups.concat(['deployment'])
             });
         }
 
-        if (this.type === 'deep_learning') {
-
-        }
-
         if (this.type === 'rpa') {
-            tasks.push({
-                type: "component",
-                name: this.name,
-                hours: null,
-                groups: groups
+            if (this.vendor_selection) {
+                tasks.push({
+                    type: "task",
+                    title: "RPA Vendor Selection",
+                    hours: null,
+                    groups: groups.concat(['vendor_selection'])
+                });
+
+                tasks.push({
+                    type: "task",
+                    title: "Initial technical discovery session",
+                    hours: 4,
+                    groups: groups.concat(['vendor_selection'])
+                });
+
+                tasks.push({
+                    type: "task",
+                    title: "Preparation of pro/con sheets on compatible vendors",
+                    hours: 10,
+                    groups: groups.concat(['vendor_selection'])
+                });
+
+                tasks.push({
+                    type: "task",
+                    title: "Vendor selection session with team",
+                    hours: 2,
+                    groups: groups.concat(['vendor_selection'])
+                });
+            }
+
+            if (this.deployment_configuration) {
+                tasks.push({
+                    type: "task",
+                    title: "RPA Deployment Configuration",
+                    hours: null,
+                    groups: groups.concat(['deployment_configuration'])
+                });
+
+                tasks.push({
+                    type: "task",
+                    title: "Go through security protocols to get team access to servers",
+                    hours: 8,
+                    groups: groups.concat(['deployment_configuration'])
+                });
+
+                tasks.push({
+                    type: "task",
+                    title: "Configure the central RPA bot software and cluster",
+                    hours: 40,
+                    groups: groups.concat(['deployment_configuration'])
+                });
+            }
+
+            this.processes.forEach((process) => {
+                if (process.name.trim()) {
+                    tasks.push({
+                        type: "component",
+                        title: process.name,
+                        hours: null,
+                        groups: groups.concat(['rpa-' + process.name])
+                    });
+                    tasks.push({
+                        type: "component",
+                        title: "Job shadowing of person performing the process",
+                        hours: 2,
+                        groups: groups.concat(['rpa-' + process.name])
+                    });
+
+                    // Calculate how long we expect to be configuring this process within the RPA tool
+                    const configHoursPerStep = 0.15;
+                    const fieldTestingHoursPerStep = 0.10;
+                    const totalStepConfigTime = process.steps * configHoursPerStep;
+                    const totalStepFieldTestingTime = process.steps * fieldTestingHoursPerStep;
+
+                    tasks.push({
+                        type: "task",
+                        title: "Initial configuration of the process steps within the RPA tool",
+                        hours: Math.ceil(8 + totalStepConfigTime),
+                        groups: groups.concat(['rpa-' + process.name])
+                    });
+
+                    tasks.push({
+                        type: "task",
+                        title: "Process field testing with operations team and refinement",
+                        hours: Math.ceil(2 + totalStepFieldTestingTime),
+                        groups: groups.concat(['rpa-' + process.name])
+                    });
+
+                    tasks.push({
+                        type: "task",
+                        title: "Integration of RPA process into other company systems",
+                        hours: 8,
+                        groups: groups.concat(['rpa-' + process.name])
+                    });
+                }
             });
-
-	    if (this.vendor_selection)
-	    {
-	            tasks.push({
-        	        type: "task",
-	                name: "RPA Vendor Selection",
-	                hours: null,
-	                groups: groups.concat(['vendor_selection'])
-	            });
-
-	            tasks.push({
-        	        type: "task",
-	                name: "Initial technical discovery session",
-	                hours: 4,
-	                groups: groups.concat(['vendor_selection'])
-	            });
-
-	            tasks.push({
-        	        type: "task",
-	                name: "Preparation of pro/con sheets on compatible vendors",
-	                hours: 10,
-	                groups: groups.concat(['vendor_selection'])
-	            });
-
-	            tasks.push({
-        	        type: "task",
-	                name: "Vendor selection session with team",
-	                hours: 2,
-	                groups: groups.concat(['vendor_selection'])
-	            });
-	    }
-	
-	    if (this.deployment_configuration)
-	    {
-	            tasks.push({
-        	        type: "task",
-	                name: "RPA Deployment Configuration",
-	                hours: null,
-	                groups: groups.concat(['deployment_configuration'])
-	            });
-
-	            tasks.push({
-        	        type: "task",
-	                name: "Go through security protocols to get team access to servers",
-	                hours: 8,
-	                groups: groups.concat(['deployment_configuration'])
-	            });
-
-	            tasks.push({
-        	        type: "task",
-	                name: "Configure the central RPA bot software and cluster",
-	                hours: 40,
-	                groups: groups.concat(['deployment_configuration'])
-	            });
-	    }    
-	
-	    this.processes.forEach((process) => {
-		    if (process.name.trim())
-		    {
-			    tasks.push({
-				    type: "component",
-				    name: process.name,
-				    hours: null,
-				    groups: groups.concat(['rpa-' + process.name])
-			    });
-			    tasks.push({
-				    type: "component",
-				    name: "Job shadowing of person performing the process",
-				    hours: 2,
-				    groups: groups.concat(['rpa-' + process.name])
-			    });
-
-                            // Calculate how long we expect to be configuring this process within the RPA tool
-			    const configHoursPerStep = 0.15;
-			    const fieldTestingHoursPerStep = 0.10;
-			    const totalStepConfigTime = process.steps * configHoursPerStep;
-			    const totalStepFieldTestingTime = process.steps * fieldTestingHoursPerStep;
-
-			    tasks.push({
-				    type: "task",
-				    name: "Initial configuration of the process steps within the RPA tool",
-				    hours: Math.ceil(8 + totalStepConfigTime),
-				    groups: groups.concat(['rpa-' + process.name])
-			    });
-
-			    tasks.push({
-				    type: "task",
-				    name: "Process field testing with operations team and refinement",
-				    hours: Math.ceil(2 + totalStepFieldTestingTime),
-				    groups: groups.concat(['rpa-' + process.name])
-			    });
-
-			    tasks.push({
-				    type: "task",
-				    name: "Integration of RPA process into other company systems",
-				    hours: 8,
-				    groups: groups.concat(['rpa-' + process.name])
-			    });
-		    }
-	    });
-
         }
-
 
         if (this.type === 'custom') {
-            tasks.push({
-                type: "component",
-                name: this.name,
-                hours: null,
-                groups: groups
-            });
-
             tasks = tasks.concat(this.tasks.map((task) => {
                 return {
                     type: task.type,
-                    name: task.name,
+                    title: task.title,
                     hours: Number(task.hours),
                     description: task.description,
                     groups: groups,
@@ -680,10 +672,33 @@ class Estimate {
             }));
 
             // The last item in the task list is often a blank one, so remove it if needed
-            if (!tasks[tasks.length - 1].name.trim()) {
+            if (!tasks[tasks.length - 1].title.trim()) {
                 tasks.pop();
             }
         }
+
+        if(this.type === 'group')
+        {
+            tasks = tasks.concat({
+                type: "component",
+                title: this.title,
+                hours: null,
+                description: "",
+                groups: groups.concat([this.key]),
+            });
+        }
+
+        // Add in all the tasks for sub estimates
+        this.children.forEach((child, index) =>
+        {
+            const childEstimate = new Estimate(child, index);
+            const childGroups = groups.concat([this.key]);
+            const childResult = childEstimate.createTasksAndExpenses(childGroups);
+            const childTasks = childResult.tasks;
+            const childExpenses = childResult.expenses;
+            tasks = tasks.concat(childTasks);
+            expenses = expenses.concat(childExpenses);
+        });
 
         // Validate all of the expenses being output
         // TODO: Move to app.jsx
@@ -700,7 +715,7 @@ class Estimate {
     }
 
     calculateHours() {
-        const tasks = this.createTasksAndExpenses().tasks;
+        const tasks = this.createTasksAndExpenses([]).tasks;
         let totalHours = 0;
         tasks.forEach((task) => {
             totalHours += task.hours;
@@ -709,7 +724,7 @@ class Estimate {
     }
 
     calculateExpenses() {
-        const expenses = this.createTasksAndExpenses().expenses;
+        const expenses = this.createTasksAndExpenses([]).expenses;
         let totalExpenses = 0;
         expenses.forEach((expense) => {
             totalExpenses += expense.cost;

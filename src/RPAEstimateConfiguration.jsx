@@ -28,12 +28,6 @@ class RPAEstimateConfiguration extends Component {
         this.props.onChange(estimate);
     }
 
-    changeName(event) {
-        const estimate = this.props.estimate;
-        estimate.name = event.target.value;
-        this.props.onChange(this.props.estimate);
-    }
-
 
     ensureEmptyProcess(estimate) {
         let isEmptyProcess = false;
@@ -92,21 +86,13 @@ class RPAEstimateConfiguration extends Component {
                 <h3>Robotic Process Automation Estimate</h3>
 
                 <Form horizontal>
-                    <FormGroup controlId="formHorizontalText">
-                        <Col componentClass={ControlLabel} sm={2}>
-                            Name of group
-                        </Col>
-                        <Col sm={10}>
-                            <FormControl value={this.props.estimate.name} type="text" placeholder="The name of this group" onChange={this.changeName.bind(this)}/>
-                        </Col>
-                    </FormGroup>
                    <FormGroup>
                       <Col componentClass={ControlLabel} sm={2}>
                           General Project
                       </Col>
                       <Col sm={10}>
-                          <Checkbox value={this.props.estimate['vendor_selection']} onChange={this.checkboxClicked.bind(this, 'vendor_selection')}>Include RPA Vendor selection process?</Checkbox>
-                          <Checkbox value={this.props.estimate['deployment_configuration']} onChange={this.checkboxClicked.bind(this, 'deployment_configuration')}>Include configuring a fresh RPA Deployment?</Checkbox>
+                          <Checkbox checked={this.props.estimate['vendor_selection']} onChange={this.checkboxClicked.bind(this, 'vendor_selection')}>Include RPA Vendor selection process?</Checkbox>
+                          <Checkbox checked={this.props.estimate['deployment_configuration']} onChange={this.checkboxClicked.bind(this, 'deployment_configuration')}>Include configuring a fresh RPA Deployment?</Checkbox>
   
                       </Col>
                   </FormGroup>

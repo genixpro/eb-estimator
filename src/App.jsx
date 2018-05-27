@@ -1,9 +1,26 @@
 import React, {Component} from 'react';
-import {Grid, Row, Col, Tabs, Tab, Button, ListGroup, ListGroupItem, Table, ControlLabel, FormGroup, Checkbox} from 'react-bootstrap';
+import {
+    Grid,
+    Row,
+    Col,
+    Tabs,
+    Tab,
+    Button,
+    ListGroup,
+    ListGroupItem,
+    Table,
+    ControlLabel,
+    FormGroup,
+    Checkbox
+} from 'react-bootstrap';
 import EstimateConfiguration from './EstimateConfiguration.jsx';
 import ProposalTask from './ProposalTask.jsx';
 import Estimate from './Estimate';
 import clone from 'clone';
+
+
+import SortableTree, {addNodeUnderParent, removeNodeAtPath, changeNodeAtPath} from 'react-sortable-tree';
+import 'react-sortable-tree/style.css'; // This only needs to be imported once in your app
 
 import './App.css';
 
@@ -40,108 +57,110 @@ class App extends Component {
         window.localStorage.setItem('data', JSON.stringify(data));
     }
 
-    componentDidMount() {
-
-    }
-
     checkboxClicked(optionKey, event) {
         const value = this.state[optionKey];
-        this.setState({[optionKey]: !value});
-        this.saveState();
+        this.setState({[optionKey]: !value}, this.saveState.bind(this));
     }
 
     nextEstimateKey() {
         const key = this.state.currentEstimateKey;
-        this.setState({currentEstimateKey: key + 1});
+        this.setState({currentEstimateKey: key + 1}, this.saveState.bind(this));
         return "estimate-" + key.toString();
     }
 
     addDeepLearningEstimate() {
-        const estimates = this.state.estimates;
-        estimates.push({
-            name: "New Deep Learning Algorithm.",
+        const newEstimate = {
+            title: "New Deep Learning Algorithm.",
             key: this.nextEstimateKey(),
-            type: "deep_learning"
-        });
-        this.setState({estimates: estimates});
-        this.saveState();
+            type: "deep_learning",
+            children: []
+        };
+        const estimates = this.state.estimates.concat([newEstimate]);
+        this.setState({estimates: estimates}, this.saveState.bind(this));
     }
 
     addDataAnnotation() {
-        const estimates = this.state.estimates;
-        estimates.push({
+        const newEstimate = {
             key: this.nextEstimateKey(),
-            type: "data_annotation"
-        });
-        this.setState({estimates: estimates});
-        this.saveState();
+            type: "data_annotation",
+            children: []
+        };
+        const estimates = this.state.estimates.concat([newEstimate]);
+        this.setState({estimates: estimates}, this.saveState.bind(this));
     }
 
     addCustom() {
-        const estimates = this.state.estimates;
-        estimates.push({
+        const newEstimate = {
             key: this.nextEstimateKey(),
             type: "custom",
-            name: "",
+            title: "",
             tasks: [{
                 type: "component",
-                name: "New Task",
+                title: "New Task",
                 hours: 0,
                 groups: []
-            }]
-        });
-        this.setState({estimates: estimates});
-        this.saveState();
+            }],
+            children: []
+        };
+        const estimates = this.state.estimates.concat([newEstimate]);
+        this.setState({estimates: estimates}, this.saveState.bind(this));
     }
 
     addRPAEstimate() {
-        const estimates = this.state.estimates;
-        estimates.push({
-            name: "New RPA Estimate",
+        const newEstimate = {
+            title: "New RPA Estimate",
             key: this.nextEstimateKey(),
             type: "rpa",
-	    processes: [{
-	        name: "New Process",
-		steps: 5
-	    }]
-        });
-        this.setState({estimates: estimates});
-        this.saveState();
+            processes: [{
+                name: "New Process",
+                steps: 5
+            }],
+            children: []
+        };
+        const estimates = this.state.estimates.concat([newEstimate]);
+        this.setState({estimates: estimates}, this.saveState.bind(this));
     }
+
+    addGroup() {
+        const newEstimate = {
+            key: this.nextEstimateKey(),
+            type: "group",
+            title: "New Estimate Group",
+            children: []
+        };
+        const estimates = this.state.estimates.concat([newEstimate]);
+        this.setState({estimates: estimates}, this.saveState.bind(this));
+    }
+
+
     resetEstimates() {
         window.bootbox.confirm("Are you sure you want to reset your estimates? You will lose everything.", (result) => {
             if (result) {
-                this.setState(this.getDefaultState());
-                this.saveState();
+                this.setState(this.getDefaultState(), this.saveState.bind(this));
             }
         });
     }
 
-    moveEstimateUp(index) {
-        let estimates = this.state.estimates;
-        const estimate = estimates.splice(index, 1)[0];
-        estimates.splice(Math.max(0, index - 1), 0, estimate);
-        this.setState({estimates: estimates});
+    deleteEstimate(path) {
+        console.log(path);
+        this.setState(state => ({
+            estimates: removeNodeAtPath({
+                treeData: state.estimates,
+                path: path,
+                getNodeKey: ((data) => data.treeIndex)
+            })
+        }), this.saveState.bind(this));
     }
 
-    moveEstimateDown(index) {
-        let estimates = this.state.estimates;
-        const estimate = estimates.splice(index, 1)[0];
-        this.state.estimates.splice(Math.min(estimates.length, index + 1), 0, estimate);
-        this.setState({estimates: estimates});
-    }
-
-    deleteEstimate(index) {
-        let estimates = this.state.estimates;
-        estimates.splice(index, 1);
-        this.setState({estimates: estimates});
-    }
-
-    estimateChanged(index, newEstimate) {
-        const estimates = this.state.estimates;
-        estimates[index] = newEstimate;
-        this.setState({estimates: estimates});
-        this.saveState();
+    estimateChanged(path, newEstimate) {
+        this.setState(state => ({
+            estimates: changeNodeAtPath({
+                treeData: state.estimates,
+                path: path,
+                newNode: newEstimate,
+                getNodeKey: ((data) => data.treeIndex)
+            })
+        }), this.saveState.bind(this));
     }
 
     createProjectSetupTasks() {
@@ -150,7 +169,7 @@ class App extends Component {
         if (this.state.includeRepositorySetup || this.state.includeLearningExistingCode) {
             tasks.push({
                 type: "task",
-                name: "Project Setup",
+                title: "Project Setup",
                 hours: null,
                 groups: ['project_setup']
             });
@@ -158,7 +177,7 @@ class App extends Component {
             if (this.state.includeRepositorySetup) {
                 tasks.push({
                     type: "task",
-                    name: "Create repository, project trackers and do initial project setup",
+                    title: "Create repository, project trackers and do initial project setup",
                     hours: 2,
                     groups: ['project_setup']
                 });
@@ -167,7 +186,7 @@ class App extends Component {
             if (this.state.includeLearningExistingCode) {
                 tasks.push({
                     type: "task",
-                    name: "Spend time reviewing and studying the existing code-base",
+                    title: "Spend time reviewing and studying the existing code-base",
                     hours: 16,
                     groups: ['project_setup']
                 });
@@ -186,10 +205,12 @@ class App extends Component {
 
         this.state.estimates.forEach((data, index) => {
             const estimate = new Estimate(data, index);
-            tasks = tasks.concat(estimate.createTasksAndExpenses().tasks);
+            tasks = tasks.concat(estimate.createTasksAndExpenses([]).tasks);
         });
 
         tasks = tasks.map(clone);
+
+        console.log(tasks);
 
         // Validate all of the tasks being output
         tasks.forEach((task) => {
@@ -259,6 +280,25 @@ class App extends Component {
         return tasks;
     }
 
+    getHeightForEstimate(estimate) {
+        if (estimate.type === 'group') {
+            return 80;
+        }
+        if (estimate.type === 'deep_learning') {
+            return 500;
+        }
+        if (estimate.type === 'data_annotation') {
+            return 400;
+        }
+        if (estimate.type === 'custom') {
+            return 700;
+        }
+        if (estimate.type === 'rpa') {
+            return 700;
+        }
+        return 200;
+    }
+
     render() {
         return (
             <div className="App">
@@ -283,8 +323,12 @@ class App extends Component {
                                                     Project Configuration
                                                 </Col>
                                                 <Col sm={10}>
-                                                    <Checkbox checked={this.state.includeRepositorySetup} onChange={this.checkboxClicked.bind(this, 'includeRepositorySetup')}>Include Repository Setup?</Checkbox>
-                                                    <Checkbox checked={this.state.includeLearningExistingCode} onChange={this.checkboxClicked.bind(this, 'includeLearningExistingCode')}>Include learning existing codebase?</Checkbox>
+                                                    <Checkbox checked={this.state.includeRepositorySetup}
+                                                              onChange={this.checkboxClicked.bind(this, 'includeRepositorySetup')}>Include
+                                                        Repository Setup?</Checkbox>
+                                                    <Checkbox checked={this.state.includeLearningExistingCode}
+                                                              onChange={this.checkboxClicked.bind(this, 'includeLearningExistingCode')}>Include
+                                                        learning existing codebase?</Checkbox>
                                                 </Col>
                                             </FormGroup>
                                             <br/>
@@ -293,10 +337,12 @@ class App extends Component {
                                     </Row>
                                     <Row className="show-grid">
                                         <Col xs={6} md={3}>
-                                            <Button onClick={this.addDeepLearningEstimate.bind(this)}>Add Deep Learning Algorithm</Button>
+                                            <Button onClick={this.addDeepLearningEstimate.bind(this)}>Add Deep Learning
+                                                Algorithm</Button>
                                         </Col>
                                         <Col xs={6} md={3}>
-                                            <Button onClick={this.addDataAnnotation.bind(this)}>Add Data Annotation</Button>
+                                            <Button onClick={this.addDataAnnotation.bind(this)}>Add Data
+                                                Annotation</Button>
                                         </Col>
                                         <Col xs={6} md={3}>
                                             <Button onClick={this.addRPAEstimate.bind(this)}>Add RPA</Button>
@@ -304,24 +350,32 @@ class App extends Component {
                                         <Col xs={6} md={3}>
                                             <Button onClick={this.addCustom.bind(this)}>Add Custom</Button>
                                         </Col>
+                                        <Col xs={6} md={3}>
+                                            <Button onClick={this.addGroup.bind(this)}>Add Group</Button>
+                                        </Col>
                                     </Row>
-                                    <Row>
+                                    <Row className="estimate-tree">
                                         <Col xs={12}>
-                                            <ListGroup>
-                                                {this.state.estimates && this.state.estimates.map((estimate, index) =>
-                                                    <ListGroupItem key={estimate.key}>
-                                                        <EstimateConfiguration
-                                                            estimate={estimate}
-                                                            index={index}
-                                                            onChange={this.estimateChanged.bind(this, index)}
-                                                            moveEstimateUp={this.moveEstimateUp.bind(this, index)}
-                                                            moveEstimateDown={this.moveEstimateDown.bind(this, index)}
-                                                            deleteEstimate={this.deleteEstimate.bind(this, index)}
-                                                        />
-                                                    </ListGroupItem>
-                                                )
-                                                }
-                                            </ListGroup>
+                                            <div style={{"height": "1500px"}}>
+                                                <SortableTree
+                                                    treeData={this.state.estimates}
+                                                    onChange={estimates => this.setState({estimates}, this.saveState.bind(this))}
+                                                    rowHeight={(data) => this.getHeightForEstimate(data.node)}
+                                                    isVirtualized={false}
+                                                    generateNodeProps={({node, path}) => ({
+                                                        title: (
+                                                            <div>
+                                                                <EstimateConfiguration
+                                                                    estimate={node}
+                                                                    index={path}
+                                                                    onChange={this.estimateChanged.bind(this, path)}
+                                                                    deleteEstimate={this.deleteEstimate.bind(this, path)}
+                                                                />
+                                                            </div>
+                                                        )
+                                                    })}
+                                                />
+                                            </div>
                                         </Col>
                                     </Row>
                                 </Tab>
@@ -338,7 +392,9 @@ class App extends Component {
                                             </thead>
                                             <tbody>
                                             {
-                                                this.createTaskList().map((task, index) => <ProposalTask task={task} index={index} key={task.taskNumber}/>)
+                                                this.createTaskList().map((task, index) => <ProposalTask task={task}
+                                                                                                         index={index}
+                                                                                                         key={task.taskNumber}/>)
                                             }
                                             </tbody>
                                         </Table>

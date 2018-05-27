@@ -5,6 +5,7 @@ import Estimate from './Estimate';
 import DataAnnotationEstimateConfiguration from "./DataAnnotationEstimateConfiguration";
 import CustomEstimateConfiguration from "./CustomEstimateConfiguration";
 import RPAEstimateConfiguration from "./RPAEstimateConfiguration";
+import EstimateGroupConfiguration from "./EstimateGroupConfiguration";
 
 class EstimateConfiguration extends Component {
 
@@ -37,7 +38,13 @@ class EstimateConfiguration extends Component {
     render() {
         return (
             <Row className="show-grid">
+                {/*<pre>{JSON.stringify(this.props.estimate, null, 2)}</pre>*/}
                 <Col xs={12} md={10}>
+                    {
+                        this.props.estimate.type === 'group' ?
+                            <EstimateGroupConfiguration estimate={this.props.estimate} index={this.props.index} onChange={this.props.onChange}>
+                            </EstimateGroupConfiguration> : null
+                    }
                     {
                         this.props.estimate.type === 'deep_learning' ?
                             <DeepLearningEstimateConfiguration estimate={this.props.estimate} index={this.props.index} onChange={this.props.onChange}>
@@ -60,10 +67,13 @@ class EstimateConfiguration extends Component {
                     }
                 </Col>
                 <Col xs={4} md={2}>
-                    <h4 style={{'textAlign': 'right'}}>{this.calculateHours().toFixed(2)} hours</h4>
-                    <h4 style={{'textAlign': 'right'}}>${this.calculateExpenses().toFixed(2)} expenses</h4>
-                    <Button bsStyle="primary" onClick={this.moveUpClicked.bind(this)}>Up</Button>
-                    <Button bsStyle="primary" onClick={this.moveDownClicked.bind(this)}>Down</Button>
+                    {
+                        this.props.estimate.type !== 'group' ?
+                            <div>
+                                <h4 style={{'textAlign': 'right'}}>{this.calculateHours().toFixed(2)} hours</h4>
+                                <h4 style={{'textAlign': 'right'}}>${this.calculateExpenses().toFixed(2)} expenses</h4>
+                            </div> : null
+                    }
                     <Button bsStyle="danger" onClick={this.deleteClicked.bind(this)}>Delete</Button>
                 </Col>
             </Row>

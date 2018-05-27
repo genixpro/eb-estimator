@@ -17,7 +17,7 @@ class ProposalTask extends Component
             <tr>
                 <td>{this.props.task.taskNumber}</td>
                 <td>{this.props.task.type}</td>
-                <td>{this.props.task.name}</td>
+                <td>{this.props.task.title}</td>
                 <td style={ {'textAlign':'right'} }>{this.props.task.hours !== null ? this.props.task.hours.toFixed(1) : ""}</td>
             </tr>
         );
