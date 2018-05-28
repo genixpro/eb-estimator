@@ -13,6 +13,7 @@ const tasksSchema = {
         "hours": {type: ["number", "null"]},
         "description": {type: "string"},
         "taskNumber": {type: "string"}, // This is filled in automatically
+        "phase": {type: "string"}, // This is filled in automatically
         "type": {
             type: "string",
             enum: ['component', 'script', 'feature', 'function', 'task', 'document']
@@ -60,6 +61,9 @@ const estimateSchema = {
                     properties: {
                         "type": {
                             const: "group"
+                        },
+                        "phase": {
+                            type: "number"
                         }
                     },
                     additionalProperties: false
@@ -817,6 +821,15 @@ class Estimate {
                 expenses = expenses.concat(childExpenses);
             });
 
+            if (this.phase)
+            {
+                // Recursively set the phase on all child estimates
+                const recurse = (item) => {
+                    item.phase = this.phase;
+                    item.children.forEach(recurse);
+                };
+                children.forEach(recurse);
+            }
 
             // Add in all sub-estimates as children
             tasks = tasks.concat({

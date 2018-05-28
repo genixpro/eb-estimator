@@ -20,6 +20,7 @@ import ProposalTask from './ProposalTask.jsx';
 import VisualProposalTask from "./VisualProposalTask";
 import NumberFormat from 'react-number-format';
 import Estimate from './Estimate';
+import ContractTaskOrder from './ContractTaskOrder';
 import clone from 'clone';
 
 
@@ -321,6 +322,16 @@ class App extends Component {
         };
         tasks.map(flattenTask);
 
+        // Give any task without a phase to phase 1
+        allTasks.forEach((task) =>
+        {
+            if (task.hours && !task.phase)
+            {
+                task.phase = "1";
+            }
+        });
+
+
         return allTasks;
     }
 
@@ -338,9 +349,23 @@ class App extends Component {
         return visualTasks;
     }
 
+    getTotalHours() {
+        const tasks = this.createTaskList();
+
+        let total = 0;
+        tasks.forEach((task) =>
+        {
+            if (task.hours)
+            {
+                total += task.hours;
+            }
+        });
+        return total;
+    }
+
     getHeightForEstimate(estimate) {
         if (estimate.type === 'group') {
-            return 80;
+            return 120;
         }
         if (estimate.type === 'deep_learning') {
             return 500;
@@ -781,6 +806,16 @@ class App extends Component {
                                         <h2>Validity</h2>
                                         <p>This proposal and the prices stated are valid for 45 days after receipt.</p>
                                     </Grid>
+                                </Tab>
+                                <Tab eventKey={5} title="Contract">
+                                    <ContractTaskOrder
+                                        project={this.state.projects[this.state.selected]}
+                                        taskList={this.createTaskList()}
+                                        skillRates={this.state.projects[this.state.selected].skillRates}
+                                        total={this.getProjectTotal()}
+                                        totalHours={this.getTotalHours()}
+                                        paymentSchedule={this.getPaymentSchedule()}
+                                    />
                                 </Tab>
                             </Tabs>
                         </Col>

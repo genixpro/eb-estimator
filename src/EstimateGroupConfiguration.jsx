@@ -13,6 +13,12 @@ class EstimateGroupConfiguration extends Component {
         this.props.onChange(this.props.estimate);
     }
 
+    changePhase(event) {
+        const estimate = this.props.estimate;
+        estimate.phase = event.target.value;
+        this.props.onChange(this.props.estimate);
+    }
+
     render() {
         return (
             <div>
@@ -23,6 +29,14 @@ class EstimateGroupConfiguration extends Component {
                         </Col>
                         <Col sm={10}>
                             <FormControl value={this.props.estimate.title} type="text" placeholder="The name of this group" onChange={this.changeName.bind(this)}/>
+                        </Col>
+                    </FormGroup>
+                    <FormGroup controlId="formHorizontalText">
+                        <Col componentClass={ControlLabel} sm={2}>
+                            Phase
+                        </Col>
+                        <Col sm={10}>
+                            <FormControl value={this.props.estimate.phase} type="number" placeholder="The phase these tasks are done in" onChange={this.changePhase.bind(this)}/>
                         </Col>
                     </FormGroup>
                 </Form>
