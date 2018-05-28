@@ -18,6 +18,7 @@ import {
 import EstimateConfiguration from './EstimateConfiguration.jsx';
 import ProposalTask from './ProposalTask.jsx';
 import VisualProposalTask from "./VisualProposalTask";
+import NumberFormat from 'react-number-format';
 import Estimate from './Estimate';
 import clone from 'clone';
 
@@ -59,6 +60,7 @@ class App extends Component {
                 "fullStackDeveloper": 100,
                 "rpaConsultant": 100
             },
+            numberOfPayments: 2,
             estimates: []
         };
     }
@@ -80,6 +82,12 @@ class App extends Component {
     changeSkillRate(type, event) {
         const project = this.state.projects[this.state.selected];
         project.skillRates[type] = event.target.value;
+        this.setState({projects: this.state.projects}, this.saveState.bind(this));
+    }
+
+    changeNumberOfPayments(event) {
+        const project = this.state.projects[this.state.selected];
+        project.numberOfPayments = event.target.value;
         this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
 
@@ -396,6 +404,124 @@ class App extends Component {
         this.setState({selected: projectIndex})
     }
 
+
+    createExpenseList() {
+        let expenses = [];
+
+        this.state.projects[this.state.selected].estimates.forEach((data, index) => {
+            const estimate = new Estimate(data, index);
+            expenses = expenses.concat(estimate.createTasksAndExpenses([]).expenses);
+        });
+
+        expenses = expenses.map(clone);
+
+        return expenses;
+    }
+
+    computeProjectFees()
+    {
+        const tasks = this.createTaskList();
+
+        const skills = [
+            'aiEngineer',
+            'rpaConsultant',
+            'fullStackDeveloper'
+        ];
+        const skillTitles = [
+            'AI Engineer',
+            'RPA Consultant',
+            'Full Stack Developer'
+        ];
+        const totalHoursBySkill = {};
+        skills.forEach((skill) => totalHoursBySkill[skill] = 0);
+
+        tasks.forEach((task) =>
+        {
+            if (task.hours)
+            {
+                totalHoursBySkill[task.skill] += task.hours;
+            }
+        });
+
+        // Fetch the expenses so that they can be turned into fees as well
+        const expenses = this.createExpenseList();
+
+        // Create a fee for each skill
+        const fees = [];
+        skills.forEach((skill, skillIndex) => {
+            if (totalHoursBySkill[skill])
+            {
+                fees.push({
+                    title: `${skillTitles[skillIndex]} - ${totalHoursBySkill[skill].toFixed(1)} hours @ \$${this.state.projects[this.state.selected].skillRates[skill]} / hour`,
+                    amount: totalHoursBySkill[skill] * this.state.projects[this.state.selected].skillRates[skill]
+                });
+            }
+        });
+
+        // Create a fee for each expense
+        expenses.forEach((expense) => {
+            fees.push({
+                title: expense.title,
+                amount: expense.cost
+            });
+        });
+
+
+        // Now create the subtotal
+        let subtotal = 0;
+        fees.forEach((fee) => subtotal+= fee.amount);
+        fees.push({
+            title: "Subtotal",
+            amount: subtotal
+        });
+
+        // Add in HST
+        fees.push({
+            title: "HST",
+            amount: (subtotal * 0.13).toFixed(0)
+        });
+
+        // Add in total
+        fees.push({
+            title: "Total",
+            amount: (subtotal * 1.13).toFixed(0)
+        });
+
+        return fees;
+    }
+
+    getProjectTotal()
+    {
+        const fees = this.computeProjectFees();
+        return fees[fees.length - 1].amount; // Last entry is the total
+    }
+
+    getPaymentSchedule()
+    {
+        const project = this.state.projects[this.state.selected];
+        project.numberOfPayments = Number(project.numberOfPayments);
+        if (project.numberOfPayments <= 2)
+        {
+            return [0.5, 0.5];
+        }
+        else if (project.numberOfPayments === 3)
+        {
+            return [0.3, 0.4, 0.3];
+        }
+        else if (project.numberOfPayments === 4)
+        {
+            return [0.2, 0.3, 0.3, 0.2];
+        }
+        else if (project.numberOfPayments === 5)
+        {
+            return [0.2, 0.2, 0.2, 0.2, 0.2];
+        }
+        else
+        {
+            return [0.5, 0.5];
+        }
+    }
+
     render() {
         return (
             <div className="App">
@@ -487,6 +613,18 @@ class App extends Component {
                                             </FormGroup>
                                             <br/>
                                             <br/>
+                                            <FormGroup controlId="formHorizontalText">
+                                                <Col componentClass={ControlLabel} sm={2}>
+                                                    Number of Payments (2 to 5)
+                                                </Col>
+                                                <Col sm={10}>
+                                                    <FormControl value={this.state.projects[this.state.selected].numberOfPayments} type="number"
+                                                                 placeholder="Number of Payments"
+                                                                 min={2}
+                                                                 max={5}
+                                                                 onChange={this.changeNumberOfPayments.bind(this)}/>
+                                                </Col>
+                                            </FormGroup>
                                         </Col>
                                     </Row>
                                     <Row className="show-grid">
@@ -517,7 +655,10 @@ class App extends Component {
                                             <div style={{"height": "1500px"}}>
                                                 <SortableTree
                                                     treeData={this.state.projects[this.state.selected].estimates}
-                                                    onChange={estimates => this.setState({estimates}, this.saveState.bind(this))}
+                                                    onChange={estimates => {
+                                                        this.state.projects[this.state.selected].estimates = estimates;
+                                                        this.setState({projects: this.state.projects}, this.saveState.bind(this))
+                                                    }}
                                                     rowHeight={(data) => this.getHeightForEstimate(data.node)}
                                                     isVirtualized={false}
                                                     generateNodeProps={({node, path}) => ({
@@ -586,16 +727,59 @@ class App extends Component {
                                         </Table>
                                     </Grid>
                                 </Tab>
-                                <Tab eventKey={4} title="RFP">
+                                <Tab eventKey={4} title="Fees">
                                     <Grid>
-                                        <Row className="show-grid">
-                                            <Col xs={12} md={8}>
+                                        <h2>Fees</h2>
+                                        <Table>
+                                            <thead>
+                                            <tr>
+                                                <td>Description</td>
+                                                <td>Amount</td>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {
+                                                this.computeProjectFees().map((fee) =>
+                                                    <tr>
+                                                        <td>{fee.title}</td>
+                                                        <td>
+                                                            <p style={ {'textAlign':'right', 'font-family': 'monospace'} }>
+                                                                <NumberFormat value={fee.amount} displayType={'text'} thousandSeparator={true} prefix={'$'} decimalScale={0} />
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            }
+                                            </tbody>
+                                        </Table>
+                                        <h2>Payments</h2>
+                                        <p>The fees will be broken down into {this.state.projects[this.state.selected].numberOfPayments} payments</p>
+                                        <ul>
+                                            {this.getPaymentSchedule().map((payment, index) =>
+                                                <li>
+                                                    {(payment * 100).toFixed(0)}%
+                                                    (<NumberFormat value={this.getProjectTotal() * payment} displayType={'text'} thousandSeparator={true} prefix={'$'} decimalScale={0} />)
+                                                    {index === 0 ? <span> is due prior to starting the project.</span> : null}
+                                                    {index !== 0 ? <span> is due upon the completion of milestone ((INSERT MILESTONE HERE))</span> : null}
+                                                </li>
+                                            )}
+                                        </ul>
+                                        <p>Payment is due upon receipt of the invoice. The project will not begin until the first payment is received.</p>
 
-                                            </Col>
-                                            <Col xs={6} md={4}>
-                                                stuff
-                                            </Col>
-                                        </Row>
+                                        <p>
+                                            <span>A 10% discount is offered if the full amount (100%) is paid upon acceptance of the proposal. This amounts to a </span>
+                                            <NumberFormat value={this.getProjectTotal() * 0.10} displayType={'text'} thousandSeparator={true} prefix={'$'} decimalScale={0} />
+                                            <span>savings on this project.</span>
+                                        </p>
+
+                                        <h2>Expenses</h2>
+                                        <p>There shall be no additional expenses as part of this project.</p>
+
+                                        <h2>Cancellation</h2>
+                                        <p>This project is noncancelable for any reason. You may postpone and reschedule with our approval without penalty so long as you maintain the existing payment schedule. The quality of our work is guaranteed, and if our work is not consistent with the quality described, we will refund your full fee.</p>
+
+                                        <h2>Validity</h2>
+                                        <p>This proposal and the prices stated are valid for 45 days after receipt.</p>
                                     </Grid>
                                 </Tab>
                             </Tabs>
