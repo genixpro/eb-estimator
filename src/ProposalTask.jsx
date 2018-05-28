@@ -19,8 +19,11 @@ class ProposalTask extends Component
 
         const recurse = (task) =>
         {
-            totalHours += task.hours;
-            totalCost += task.hours * this.props.skillRates[task.skill];
+            if(task.hours)
+            {
+                totalHours += task.hours;
+                totalCost += task.hours * this.props.skillRates[task.skill];
+            }
             task.children.forEach((task) => recurse(task));
         };
         recurse(this.props.task);

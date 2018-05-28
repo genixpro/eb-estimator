@@ -3,7 +3,7 @@ import {Component} from 'react';
 class CatchErrors extends Component {
     componentDidCatch(error, info)
     {
-        window.localStorage.setItem('data', null);
+        // window.localStorage.setItem('data', null);
         throw error;
     }
 

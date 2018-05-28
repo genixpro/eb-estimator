@@ -29,6 +29,7 @@ class CustomEstimateConfiguration extends Component {
             estimate.tasks.push({
                 type: 'feature',
                 title: " ",
+                skill: "fullStackDeveloper",
                 hours: 0,
                 children: []
             })

@@ -52,3 +52,9 @@
 .App .modal-lg {
   width: 70%;
 }
+
+.App .scrollable-modal .modal-body
+{
+  height: 70vh;
+  overflow-y: auto;
+}

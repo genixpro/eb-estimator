@@ -135,17 +135,15 @@ class UserInterfaceEstimateConfiguration extends Component {
     }
 
     closeCrop(component) {
-
-        console.log("cropping ", component);
-        UserInterfaceEstimateConfiguration.getCroppedImg(this.props.estimate.mockup, component.pixelCrop, "cropped.jpg").then((fileData) =>
-        {
-            UserInterfaceEstimateConfiguration.getFileData(fileData,
-                (dataUri) =>
-                {
-                    component.mockup = dataUri;
-                    this.props.onChange(this.props.estimate);
-                });
-        });
+        if (component.pixelCrop) {
+            UserInterfaceEstimateConfiguration.getCroppedImg(this.props.estimate.mockup, component.pixelCrop, "cropped.jpg").then((fileData) => {
+                UserInterfaceEstimateConfiguration.getFileData(fileData,
+                    (dataUri) => {
+                        component.mockup = dataUri;
+                        this.props.onChange(this.props.estimate);
+                    });
+            });
+        }
 
         this.setState({
             "showingCrop": false
@@ -271,7 +269,7 @@ class UserInterfaceEstimateConfiguration extends Component {
 
 
                 { this.state.showingCrop ?
-                    <div className="static-modal">
+                    <div className="static-modal scrollable-modal">
                         <Modal.Dialog bsSize={'lg'}>
                             <Modal.Header>
                                 <Modal.Title>Crop Mockup</Modal.Title>
