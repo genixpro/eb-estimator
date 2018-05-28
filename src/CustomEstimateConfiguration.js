@@ -12,6 +12,11 @@ class CustomEstimateConfiguration extends Component {
         this.props.onChange(this.props.estimate);
     }
 
+    changeSkill(taskInfo, event) {
+        taskInfo.skill = event.target.value;
+        this.props.onChange(this.props.estimate);
+    }
+
     // This function always makes sure there is an empty task at the end of the list.
     ensureEmptyTask(estimate) {
         let isEmptyTask = false;
@@ -41,6 +46,19 @@ class CustomEstimateConfiguration extends Component {
                     <option value="function">Function</option>
                     <option value="task">Task</option>
                     <option value="document">Document</option>
+                </select>
+            </div>
+        );
+    }
+
+    renderSkill(cellInfo) {
+        const taskInfo = cellInfo.original;
+        return (
+            <div>
+                <select value={taskInfo.skill} defaultValue='component' onChange={this.changeSkill.bind(this, taskInfo)}>
+                    <option value="aiEngineer">AI Engineer</option>
+                    <option value="fullStackDeveloper">Full Stack Dev</option>
+                    <option value="rpaConsultant">RPA Consultant</option>
                 </select>
             </div>
         );
@@ -92,6 +110,11 @@ class CustomEstimateConfiguration extends Component {
                             Header: "Type",
                             accessor: "type",
                             Cell: this.renderTaskType.bind(this)
+                        },
+                        {
+                            Header: "Skill",
+                            accessor: "skill",
+                            Cell: this.renderSkill.bind(this)
                         },
                         {
                             Header: "Title",

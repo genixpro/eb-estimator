@@ -54,6 +54,11 @@ class App extends Component {
             includeRepositorySetup: true,
             includeLearningExistingCode: false,
             currentEstimateKey: 1,
+            skillRates: {
+                "aiEngineer": 150,
+                "fullStackDeveloper": 100,
+                "rpaConsultant": 100
+            },
             estimates: []
         };
     }
@@ -67,8 +72,14 @@ class App extends Component {
     }
 
     changeName(event) {
-        const selected = this.state.projects[this.state.selected];
-        selected.name = event.target.value;
+        const project = this.state.projects[this.state.selected];
+        project.name = event.target.value;
+        this.setState({projects: this.state.projects}, this.saveState.bind(this));
+    }
+
+    changeSkillRate(type, event) {
+        const project = this.state.projects[this.state.selected];
+        project.skillRates[type] = event.target.value;
         this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
 
@@ -78,8 +89,8 @@ class App extends Component {
     }
 
     checkboxClicked(optionKey, event) {
-        const selected = this.state.projects[this.state.selected];
-        selected[optionKey] = !selected[optionKey];
+        const project = this.state.projects[this.state.selected];
+        project[optionKey] = !project[optionKey];
         this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
 
@@ -123,6 +134,7 @@ class App extends Component {
                 type: "component",
                 title: "New Task",
                 hours: 0,
+                skill: "fullStackDeveloper",
                 children: []
             }],
             children: []
@@ -168,8 +180,7 @@ class App extends Component {
             components: [{
                 type: "component",
                 title: "New Task",
-                hours: 0,
-                groups: []
+                hours: 0
             }],
             children: []
         };
@@ -194,7 +205,7 @@ class App extends Component {
         this.setState(state => {
             const project = state.projects[state.selected];
             project.estimates = removeNodeAtPath({
-                treeData: state.estimates,
+                treeData: project.estimates,
                 path: path,
                 getNodeKey: ((data) => data.treeIndex)
             });
@@ -227,6 +238,7 @@ class App extends Component {
                 type: "task",
                 title: "Project Setup",
                 hours: null,
+                skill: "fullStackDeveloper",
                 children: []
             };
 
@@ -238,6 +250,7 @@ class App extends Component {
                     type: "task",
                     title: "Create repository, project trackers and do initial project setup",
                     hours: 2,
+                    skill: "fullStackDeveloper",
                     children: []
                 });
             }
@@ -247,6 +260,7 @@ class App extends Component {
                     type: "task",
                     title: "Spend time reviewing and studying the existing code-base",
                     hours: 16,
+                    skill: "fullStackDeveloper",
                     children: []
                 });
             }
@@ -430,7 +444,7 @@ class App extends Component {
                                             </FormGroup>
                                             <FormGroup controlId="formHorizontalText">
                                                 <Col componentClass={ControlLabel} sm={2}>
-                                                    Project Configuration
+                                                    Options
                                                 </Col>
                                                 <Col sm={10}>
                                                     <Checkbox checked={this.state.projects[this.state.selected].includeRepositorySetup}
@@ -439,6 +453,36 @@ class App extends Component {
                                                     <Checkbox checked={this.state.projects[this.state.selected].includeLearningExistingCode}
                                                               onChange={this.checkboxClicked.bind(this, 'includeLearningExistingCode')}>Include
                                                         learning existing codebase?</Checkbox>
+                                                </Col>
+                                            </FormGroup>
+                                            <FormGroup controlId="formHorizontalText">
+                                                <Col componentClass={ControlLabel} sm={2}>
+                                                    AI Engineer Rate
+                                                </Col>
+                                                <Col sm={10}>
+                                                    <FormControl value={this.state.projects[this.state.selected].skillRates.aiEngineer} type="number"
+                                                                 placeholder="AI Engineer Rate ($/hour)"
+                                                                 onChange={this.changeSkillRate.bind(this, 'aiEngineer')}/>
+                                                </Col>
+                                            </FormGroup>
+                                            <FormGroup controlId="formHorizontalText">
+                                                <Col componentClass={ControlLabel} sm={2}>
+                                                    Full Stack Developer Rate
+                                                </Col>
+                                                <Col sm={10}>
+                                                    <FormControl value={this.state.projects[this.state.selected].skillRates.fullStackDeveloper} type="number"
+                                                                 placeholder="Full Stack Developer Rate ($/hour)"
+                                                                 onChange={this.changeSkillRate.bind(this, 'fullStackDeveloper')}/>
+                                                </Col>
+                                            </FormGroup>
+                                            <FormGroup controlId="formHorizontalText">
+                                                <Col componentClass={ControlLabel} sm={2}>
+                                                    RPA Consultant Rate
+                                                </Col>
+                                                <Col sm={10}>
+                                                    <FormControl value={this.state.projects[this.state.selected].skillRates.rpaConsultant} type="number"
+                                                                 placeholder="RPA Consultant Rate ($/hour)"
+                                                                 onChange={this.changeSkillRate.bind(this, 'rpaConsultant')}/>
                                                 </Col>
                                             </FormGroup>
                                             <br/>
@@ -502,13 +546,19 @@ class App extends Component {
                                                 <td>Type</td>
                                                 <td>Name</td>
                                                 <td>Hours</td>
+                                                <td>Skill</td>
+                                                <td>Cost</td>
+                                                <td>Total Hours</td>
+                                                <td>Total Cost</td>
                                             </tr>
                                             </thead>
                                             <tbody>
                                             {
                                                 this.createTaskList().map((task, index) => <ProposalTask task={task}
                                                                                                          index={index}
-                                                                                                         key={task.taskNumber}/>)
+                                                                                                         key={task.taskNumber}
+                                                                                                         skillRates={this.state.projects[this.state.selected].skillRates}
+                                                />)
                                             }
                                             </tbody>
                                         </Table>

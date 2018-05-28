@@ -20,13 +20,17 @@ const tasksSchema = {
         "image": {
             type: "string"
         },
+        "skill": {
+            type: ["string", "null"],
+            enum: ['aiEngineer', 'fullStackDeveloper', 'rpaConsultant', null]
+        },
         "children": {
             type: "array",
             items: {$ref: "#/"}
         },
     },
     additionalProperties: false,
-    required: ['title', 'hours', 'type', 'children']
+    required: ['title', 'hours', 'type', 'skill', 'children']
 };
 const validateTaskData = ajv.compile(tasksSchema);
 
@@ -240,6 +244,7 @@ class Estimate {
                 type: "component",
                 title: "Data Preparation Pipeline",
                 hours: null,
+                skill: 'aiEngineer',
                 children: []
             };
 
@@ -252,6 +257,7 @@ class Estimate {
                     type: "script",
                     title: "Convert existing data into usable training data",
                     hours: 5 * humanTimeMultiplier,
+                    skill: 'aiEngineer',
                     children: []
                 })
             }
@@ -261,6 +267,7 @@ class Estimate {
                     type: "script",
                     title: "Train custom word-vector model using fastText",
                     hours: 8,
+                    skill: 'aiEngineer',
                     children: []
                 })
             }
@@ -269,6 +276,7 @@ class Estimate {
                 type: "script",
                 title: "Prepare training data into Tensorflow format",
                 hours: null,
+                skill: 'aiEngineer',
                 children: []
             };
 
@@ -279,6 +287,7 @@ class Estimate {
                     type: "feature",
                     title: "Include fast-text pretrained word embeddings as a feature for each word",
                     hours: 4,
+                    skill: 'aiEngineer',
                     children: []
                 });
             }
@@ -288,6 +297,7 @@ class Estimate {
                     type: "feature",
                     title: "Include the custom word embeddings as a feature for each word",
                     hours: 4,
+                    skill: 'aiEngineer',
                     children: []
                 });
             }
@@ -297,6 +307,7 @@ class Estimate {
                     type: "feature",
                     title: "Include word positioning, such as width, height, x and y as a feature for each word.",
                     hours: 24,
+                    skill: 'aiEngineer',
                     children: []
                 });
             }
@@ -306,6 +317,7 @@ class Estimate {
                     type: "feature",
                     title: "Include part of speech, (e.g. noun, verb, preposition, adjective, etc...) as a feature",
                     hours: 12,
+                    skill: 'aiEngineer',
                     children: []
                 });
             }
@@ -315,6 +327,7 @@ class Estimate {
                     type: "feature",
                     title: "Include dependent words (e.g. this noun applies to this verb) as features.",
                     hours: 12,
+                    skill: 'aiEngineer',
                     children: []
                 });
             }
@@ -323,6 +336,7 @@ class Estimate {
                 type: "feature",
                 title: "Serialize the dataset into TFRecords files",
                 hours: 4,
+                skill: 'aiEngineer',
                 children: []
             });
 
@@ -330,104 +344,120 @@ class Estimate {
                 type: "feature",
                 title: "Break the dataset up into training, testing, and validation sets.",
                 hours: 4,
+                skill: 'aiEngineer',
                 children: []
             });
 
-            const trainingScripts = {
+            const deepLearningScripts = {
                 type: "component",
                 title: "Deep Learning Scripts",
                 hours: null,
+                skill: 'aiEngineer',
                 children: []
             };
 
-            dataPrep.children.push(trainingScripts);
+            tasks.push(deepLearningScripts);
 
-            trainingScripts.children.push({
+            const trainingScript = {
                 type: "script",
                 title: "Create a script to train a single neural network",
                 hours: null,
+                skill: 'aiEngineer',
                 children: []
-            });
+            };
 
-            trainingScripts.children.push({
+            deepLearningScripts.children.push(trainingScript);
+
+            trainingScript.children.push({
                 type: "feature",
                 title: "Base neural network architecture, with hooks to change alter hyper-parameters with command line parameters",
                 hours: 4 * humanTimeMultiplier,
+                skill: 'aiEngineer',
                 children: []
             });
 
-            trainingScripts.children.push({
+            trainingScript.children.push({
                 type: "feature",
                 title: "Ability to 'name' a neural network to assist with experimentation",
                 hours: 1,
+                skill: 'aiEngineer',
                 children: []
             });
 
-            trainingScripts.children.push({
+            trainingScript.children.push({
                 type: "feature",
                 title: "Input dataset using Tensorflow 'datasets' API",
                 hours: humanTimeMultiplier,
+                skill: 'aiEngineer',
                 children: []
             });
 
-            trainingScripts.children.push({
+            trainingScript.children.push({
                 type: "feature",
                 title: "Core training loop, including measuring training & testing accuracy",
                 hours: 1.5 * humanTimeMultiplier,
+                skill: 'aiEngineer',
                 children: []
             });
 
-            trainingScripts.children.push({
+            trainingScript.children.push({
                 type: "feature",
                 title: "Output training & testing accuracy as Tensorflow 'summary' objects which can be viewed within Tensorboard",
                 hours: 2,
+                skill: 'aiEngineer',
                 children: []
             });
 
-            trainingScripts.children.push({
+            trainingScript.children.push({
                 type: "feature",
                 title: "Output a CSV file showing testing accuracy, training accuracy, loss, etc.. after each 100 iterations of the neural network",
                 hours: 2,
+                skill: 'aiEngineer',
                 children: []
             });
 
-            trainingScripts.children.push({
+            trainingScript.children.push({
                 type: "feature",
                 title: "Save checkpoints of the neural network every 5,000 iterations",
                 hours: 1,
+                skill: 'aiEngineer',
                 children: []
             });
 
-            trainingScripts.children.push({
+            trainingScript.children.push({
                 type: "feature",
                 title: "Output a log file containing all standard output",
                 hours: 1,
+                skill: 'aiEngineer',
                 children: []
             });
 
             if (this.confusion_matrix) {
-                trainingScripts.children.push({
+                trainingScript.children.push({
                     type: "feature",
                     title: "Compute two confusion matrixes, (training & testing), and output them as PNG files",
                     hours: 3 * humanTimeMultiplier,
+                    skill: 'aiEngineer',
                     children: []
                 });
             }
 
             if (this.roc_curve) {
-                trainingScripts.children.push({
+                trainingScript.children.push({
                     type: "feature",
                     title: "Compute two ROC curves (training & testing), and output them as PNG files",
                     hours: 3 * humanTimeMultiplier,
+                    skill: 'aiEngineer',
                     children: []
                 });
             }
 
             if (this.worst_samples) {
-                trainingScripts.children.push({
+                trainingScript.children.push({
                     type: "feature",
                     title: "Output a list of the bottom worst 50 samples, so that they can be manually reviewed",
                     hours: 1 * humanTimeMultiplier,
+                    skill: 'aiEngineer',
                     children: []
                 });
             }
@@ -436,15 +466,17 @@ class Estimate {
                 type: "script",
                 title: "Create a script to retest a saved checkpoint from a neural network",
                 hours: null,
+                skill: 'aiEngineer',
                 children: []
             };
 
-            tasks.push(retestScriptTask);
+            deepLearningScripts.children.push(retestScriptTask);
 
             retestScriptTask.children.push({
                 type: "feature",
                 title: "Load checkpoint",
                 hours: 2,
+                skill: 'aiEngineer',
                 children: []
             });
 
@@ -452,6 +484,7 @@ class Estimate {
                 type: "feature",
                 title: "Recompute testing accuracy",
                 hours: 0.4 * humanTimeMultiplier,
+                skill: 'aiEngineer',
                 children: []
             });
 
@@ -461,6 +494,7 @@ class Estimate {
                     type: "feature",
                     title: "Recompute confusion matrix",
                     hours: 0.4 * humanTimeMultiplier,
+                    skill: 'aiEngineer',
                     children: []
                 });
                 metrics.push('confusion matrix');
@@ -471,6 +505,7 @@ class Estimate {
                     type: "feature",
                     title: "Recompute ROC curve",
                     hours: 0.4 * humanTimeMultiplier,
+                    skill: 'aiEngineer',
                     children: []
                 });
                 metrics.push('ROC curve');
@@ -481,6 +516,7 @@ class Estimate {
                     type: "feature",
                     title: "Recompute 50 worst testing samples",
                     hours: 0.4 * humanTimeMultiplier,
+                    skill: 'aiEngineer',
                     children: []
                 });
                 metrics.push('50 worst samples');
@@ -490,6 +526,7 @@ class Estimate {
                 type: "feature",
                 title: `Compute metrics (${metrics.join(', ')}) for the Validation set`,
                 hours: 2,
+                skill: 'aiEngineer',
                 children: []
             });
 
@@ -497,15 +534,17 @@ class Estimate {
                 type: "script",
                 title: "Script to optimize the neural network with Hyperopt",
                 hours: null,
+                skill: 'aiEngineer',
                 children: []
             };
 
-            tasks.push(hyperoptScriptTask);
+            deepLearningScripts.children.push(hyperoptScriptTask);
 
             hyperoptScriptTask.children.push({
                 type: "feature",
                 title: "Basic script for local hyper parameter optimization",
                 hours: 2 * humanTimeMultiplier,
+                skill: 'aiEngineer',
                 children: []
             });
 
@@ -513,6 +552,7 @@ class Estimate {
                 type: "feature",
                 title: "Allow distributing hyperopt across the network, using Hyperopt's builtin functionality",
                 hours: 2,
+                skill: 'aiEngineer',
                 children: []
             });
 
@@ -520,6 +560,7 @@ class Estimate {
                 type: "task",
                 title: "Experiment with core deep-neural network",
                 hours: null,
+                skill: 'aiEngineer',
                 children: []
             };
 
@@ -529,6 +570,7 @@ class Estimate {
                 type: "task",
                 title: "Setup a bunch of deep-learning enabled GPU servers in order to do research on",
                 hours: 2 * humanTimeMultiplier,
+                skill: 'aiEngineer',
                 children: []
             });
 
@@ -557,6 +599,7 @@ class Estimate {
                 type: "task",
                 title: "Run experiments with various hyper-parameter configurations in order to optimize accuracy",
                 hours: humanTimePerExperiment * numberOfExperiments,
+                skill: 'aiEngineer',
                 children: []
             });
 
@@ -569,6 +612,7 @@ class Estimate {
                 type: "task",
                 title: "Deployment",
                 hours: null,
+                skill: 'aiEngineer',
                 children: []
             };
 
@@ -578,6 +622,7 @@ class Estimate {
                 type: "component",
                 title: "Create a Python API server which serves the neural network model",
                 hours: 5 * humanTimeMultiplier,
+                skill: 'aiEngineer',
                 children: []
             });
 
@@ -585,6 +630,7 @@ class Estimate {
                 type: "task",
                 title: "Create Python setuptools configuration for API server",
                 hours: 2,
+                skill: 'aiEngineer',
                 children: []
             });
 
@@ -592,6 +638,7 @@ class Estimate {
                 type: "script",
                 title: "Shell script to install all the dependencies of the API server",
                 hours: 4,
+                skill: 'aiEngineer',
                 children: []
             });
 
@@ -599,6 +646,7 @@ class Estimate {
                 type: "document",
                 title: "Documentation describing the front-facing endpoints of the API server, to be used by people consuming the API",
                 hours: 4 * humanTimeMultiplier,
+                skill: 'aiEngineer',
                 children: []
             });
         }
@@ -609,6 +657,7 @@ class Estimate {
                     type: "task",
                     title: "RPA Vendor Selection",
                     hours: null,
+                    skill: 'rpaConsultant',
                     children: []
                 };
 
@@ -617,19 +666,22 @@ class Estimate {
                 vendorSelection.children.push({
                     type: "task",
                     title: "Initial technical discovery session",
-                    hours: 4
+                    hours: 4,
+                    skill: 'rpaConsultant'
                 });
 
                 vendorSelection.children.push({
                     type: "task",
                     title: "Preparation of pro/con sheets on compatible vendors",
-                    hours: 10
+                    hours: 10,
+                    skill: 'rpaConsultant'
                 });
 
                 vendorSelection.children.push({
                     type: "task",
                     title: "Vendor selection session with team",
-                    hours: 2
+                    hours: 2,
+                    skill: 'rpaConsultant'
                 });
             }
 
@@ -638,6 +690,7 @@ class Estimate {
                     type: "task",
                     title: "RPA Deployment Configuration",
                     hours: null,
+                    skill: 'rpaConsultant',
                     children: []
                 };
 
@@ -647,13 +700,15 @@ class Estimate {
                     type: "task",
                     title: "Go through security protocols to get team access to servers",
                     hours: 8,
-                    children: []
+                    children: [],
+                    skill: 'rpaConsultant'
                 });
 
                 deploymentTask.children.push({
                     type: "task",
                     title: "Configure the central RPA bot software and cluster",
                     hours: 40,
+                    skill: 'rpaConsultant',
                     children: []
                 });
             }
@@ -664,6 +719,7 @@ class Estimate {
                         type: "component",
                         title: process.name,
                         hours: null,
+                        skill: 'rpaConsultant',
                         children: []
                     };
 
@@ -671,6 +727,7 @@ class Estimate {
                         type: "component",
                         title: "Job shadowing of person performing the process",
                         hours: 2,
+                        skill: 'rpaConsultant',
                         children: []
                     });
 
@@ -684,6 +741,7 @@ class Estimate {
                         type: "task",
                         title: "Initial configuration of the process steps within the RPA tool",
                         hours: Math.ceil(8 + totalStepConfigTime),
+                        skill: 'rpaConsultant',
                         children: []
                     });
 
@@ -691,6 +749,7 @@ class Estimate {
                         type: "task",
                         title: "Process field testing with operations team and refinement",
                         hours: Math.ceil(2 + totalStepFieldTestingTime),
+                        skill: 'rpaConsultant',
                         children: []
                     });
 
@@ -698,6 +757,7 @@ class Estimate {
                         type: "task",
                         title: "Integration of RPA process into other company systems",
                         hours: 8,
+                        skill: 'rpaConsultant',
                         children: []
                     });
                 }
@@ -711,6 +771,7 @@ class Estimate {
                     title: task.title,
                     hours: Number(task.hours),
                     description: task.description,
+                    skill: task.skill,
                     children: []
                 };
             }));
@@ -729,6 +790,7 @@ class Estimate {
                     hours: Number(component.hours),
                     description: "",
                     children: [],
+                    skill: 'fullStackDeveloper',
                     image: component.mockup
                 };
             }));
@@ -761,6 +823,7 @@ class Estimate {
                 type: "component",
                 title: this.title,
                 hours: null,
+                skill: null,
                 description: "",
                 children: children
             });
