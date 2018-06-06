@@ -341,7 +341,7 @@ class App extends Component {
         const visualTasks = [];
 
         tasks.forEach((task) => {
-            if (task.image) {
+            if (task.image || !task.hours) {
                 visualTasks.push(task);
             }
         });

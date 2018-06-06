@@ -195,7 +195,7 @@ const additionalExpensesSchema = {
 const validateExpenseData = ajv.compile(additionalExpensesSchema);
 
 
-class Estimate {
+export class Estimate {
     constructor(data, index) {
         const valid = validateEstimateData(data);
         if (!valid) {
@@ -927,5 +927,40 @@ class Estimate {
     }
 }
 
+export class Task {
+    constructor(data) {
+        const valid = validateTaskData(data);
+        if (!valid) {
+            const message = JSON.stringify(validateTaskData.errors, null, 4);
+            throw new Error(message);
+        }
+
+        Object.keys(data).forEach((key) => {
+            this[key] = data[key];
+        });
+    }
+
+    hasChildrenInPhase(phase)
+    {
+        const recurse = (task) =>
+        {        // Searches all children recursively to see if any have a task in this phase
+            if (task.phase === phase)
+            {
+                return true;
+            }
+
+            for (let i = 0; i < task.children.length; i += 1)
+            {
+                if (recurse(new Task(task.children[i])))
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        return recurse(this);
+    }
+}
 
 export default Estimate;

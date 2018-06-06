@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import Estimate from './Estimate.js';
+import {Estimate, Task} from './Estimate.js';
 import NumberFormat from 'react-number-format';
 import './ContractPageCSS.css';
 import {
@@ -18,6 +18,7 @@ import {
     FormControl,
     Checkbox
 } from 'react-bootstrap';
+
 
 class ContractTaskOrder extends Component {
     constructor() {
@@ -58,8 +59,18 @@ class ContractTaskOrder extends Component {
                 {
                     phases[task.phase].total += task.hours;
                 }
-                phases[task.phase].tasks.push(task);
             }
+        });
+
+        const taskObjects = this.props.taskList.map((task) => new Task(task));
+        taskObjects.forEach((task) =>
+        {
+            Object.keys(phases).forEach((phase) => {
+                if (task.hasChildrenInPhase(phase))
+                {
+                    phases[phase].tasks.push(task);
+                }
+            });
         });
 
         return Object.values(phases);
