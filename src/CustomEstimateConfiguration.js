@@ -110,12 +110,14 @@ class CustomEstimateConfiguration extends Component {
                         {
                             Header: "Type",
                             accessor: "type",
-                            Cell: this.renderTaskType.bind(this)
+                            Cell: this.renderTaskType.bind(this),
+                            maxWidth: 150
                         },
                         {
                             Header: "Skill",
                             accessor: "skill",
-                            Cell: this.renderSkill.bind(this)
+                            Cell: this.renderSkill.bind(this),
+                            maxWidth: 150
                         },
                         {
                             Header: "Title",
@@ -125,7 +127,8 @@ class CustomEstimateConfiguration extends Component {
                         {
                             Header: "Hours",
                             accessor: "hours",
-                            Cell: this.renderEditable.bind(this)
+                            Cell: this.renderEditable.bind(this),
+                            maxWidth: 75
                         }
                     ]}
                     defaultPageSize={10}
