@@ -61,6 +61,7 @@ class App extends Component {
                 "fullStackDeveloper": 100,
                 "rpaConsultant": 100
             },
+            addSREDCredits: false,
             numberOfPayments: 2,
             estimates: []
         };
@@ -443,7 +444,7 @@ class App extends Component {
         return expenses;
     }
 
-    computeProjectFees()
+    getProjectFees()
     {
         const tasks = this.createTaskList();
 
@@ -491,34 +492,80 @@ class App extends Component {
             });
         });
 
+        return fees;
+    }
+
+
+    computeProjectTotals()
+    {
+        const totals = {
+            subtotal: 0,
+            taxes: 0,
+            total: 0,
+            sred: 0,
+            net: 0
+        };
+
+        const project = this.state.projects[this.state.selected];
+        const fees = this.getProjectFees();
 
         // Now create the subtotal
-        let subtotal = 0;
-        fees.forEach((fee) => subtotal+= fee.amount);
+        fees.forEach((fee) => totals.subtotal+= fee.amount);
+
+        totals.taxes = totals.subtotal * 0.13;
+        totals.total = totals.subtotal * 1.13;
+        totals.sred = totals.subtotal * 0.48;
+        totals.net = totals.subtotal * 0.65;
+
+        return totals;
+    }
+
+    getAllFees()
+    {
+        const project = this.state.projects[this.state.selected];
+        const fees = this.getProjectFees();
+        const totals = this.computeProjectTotals();
+
+        // Now create the subtotal
         fees.push({
             title: "Subtotal",
-            amount: subtotal
+            amount: totals.subtotal.toFixed(0)
         });
 
         // Add in HST
         fees.push({
             title: "HST",
-            amount: (subtotal * 0.13).toFixed(0)
+            amount: totals.taxes.toFixed(0)
         });
 
         // Add in total
         fees.push({
             title: "Total",
-            amount: (subtotal * 1.13).toFixed(0)
+            amount: totals.total.toFixed(0)
         });
+
+        if (project.addSREDCredits)
+        {
+            // Add in total
+            fees.push({
+                title: "SR&ED (Scientific Research & Development) Credits",
+                amount: (-totals.sred).toFixed(0)
+            });
+
+            // Add in total
+            fees.push({
+                title: "Net Total",
+                amount: (totals.net).toFixed(0)
+            });
+        }
 
         return fees;
     }
 
     getProjectTotal()
     {
-        const fees = this.computeProjectFees();
-        return fees[fees.length - 1].amount; // Last entry is the total
+        const totals = this.computeProjectTotals();
+        return totals.total;
     }
 
     getPaymentSchedule()
@@ -604,6 +651,8 @@ class App extends Component {
                                                     <Checkbox checked={this.state.projects[this.state.selected].includeLearningExistingCode}
                                                               onChange={this.checkboxClicked.bind(this, 'includeLearningExistingCode')}>Include
                                                         learning existing codebase?</Checkbox>
+                                                    <Checkbox checked={this.state.projects[this.state.selected].addSREDCredits}
+                                                              onChange={this.checkboxClicked.bind(this, 'addSREDCredits')}>Add in SR&ED Credits?</Checkbox>
                                                 </Col>
                                             </FormGroup>
                                             <FormGroup controlId="formHorizontalText">
@@ -764,7 +813,7 @@ class App extends Component {
                                             </thead>
                                             <tbody>
                                             {
-                                                this.computeProjectFees().map((fee) =>
+                                                this.getAllFees().map((fee) =>
                                                     <tr>
                                                         <td>{fee.title}</td>
                                                         <td>
@@ -777,6 +826,16 @@ class App extends Component {
                                             }
                                             </tbody>
                                         </Table>
+
+                                        <h2>SR&ED Tax Credits</h2>
+                                        <p>
+                                            <span>As a project which involves a high amount of experimental research, this project qualifies for the SR&ED tax-rebate. </span>
+                                            <span>This rebate provides HST plus an additional 35% refund off the price of the project. This means a </span>
+                                            <span style={{"font-weight": "bold"}}><NumberFormat value={this.computeProjectTotals().sred} displayType={'text'} thousandSeparator={true} prefix={'$'} decimalScale={0} /> </span>
+                                            <span>savings off the total price of the project. This is provided as a tax-rebate from the Canadian government, and can be either monthly or at the end of the fiscal year. </span>
+                                            <span>Electric Brain will prepare materials to be used as part of the SR&ED claim, but its the ultimate responsibility of the client to file the claim. </span>
+                                            <span>We recommend filing with an experienced SR&ED consultant for best results. </span>
+                                        </p>
                                         <h2>Payments</h2>
                                         <p>The fees will be broken down into {this.state.projects[this.state.selected].numberOfPayments} payments</p>
                                         <ul>
