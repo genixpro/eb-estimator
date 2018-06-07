@@ -48,6 +48,17 @@ class DeepLearningEstimateConfiguration extends Component {
                 <br/>
                 <FormGroup>
                     <Col componentClass={ControlLabel} sm={2}>
+                        Features
+                    </Col>
+                    <Col sm={10}>
+                        <Checkbox checked={this.props.estimate['api_server']} onChange={this.checkboxClicked.bind(this, 'api_server')}>API Server?
+                            format?</Checkbox>
+                    </Col>
+                </FormGroup>
+                <br/>
+                <br/>
+                <FormGroup>
+                    <Col componentClass={ControlLabel} sm={2}>
                         Data Preparation
                     </Col>
                     <Col sm={10}>

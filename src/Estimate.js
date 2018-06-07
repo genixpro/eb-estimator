@@ -85,6 +85,7 @@ const estimateSchema = {
                         "word_positioning": {type: "boolean"},
                         "part_of_speech": {type: "boolean"},
                         "word_dependencies": {type: "boolean"},
+                        "api_server": {type: "boolean"},
                         "research_cycle": {
                             type: "string",
                             enum: ['minimum', 'small', 'medium', 'large']
@@ -612,47 +613,50 @@ export class Estimate {
                 cost: numberOfExperiments * (machineTimePerExperiment + machineTimePerExperimentContingency) * machineTimeCostPerHour,
             });
 
-            const deploymentTask = {
-                type: "task",
-                title: "Deployment",
-                hours: null,
-                skill: 'aiEngineer',
-                children: []
-            };
+            if (this.api_server)
+            {
+                const deploymentTask = {
+                    type: "task",
+                    title: "Deployment",
+                    hours: null,
+                    skill: 'aiEngineer',
+                    children: []
+                };
 
-            tasks.push(deploymentTask);
+                tasks.push(deploymentTask);
 
-            deploymentTask.children.push({
-                type: "component",
-                title: "Create a Python API server which serves the neural network model",
-                hours: 5 * humanTimeMultiplier,
-                skill: 'aiEngineer',
-                children: []
-            });
+                deploymentTask.children.push({
+                    type: "component",
+                    title: "Create a Python API server which serves the neural network model",
+                    hours: 5 * humanTimeMultiplier,
+                    skill: 'aiEngineer',
+                    children: []
+                });
 
-            deploymentTask.children.push({
-                type: "task",
-                title: "Create Python setuptools configuration for API server",
-                hours: 2,
-                skill: 'aiEngineer',
-                children: []
-            });
+                deploymentTask.children.push({
+                    type: "task",
+                    title: "Create Python setuptools configuration for API server",
+                    hours: 2,
+                    skill: 'aiEngineer',
+                    children: []
+                });
 
-            deploymentTask.children.push({
-                type: "script",
-                title: "Shell script to install all the dependencies of the API server",
-                hours: 4,
-                skill: 'aiEngineer',
-                children: []
-            });
+                deploymentTask.children.push({
+                    type: "script",
+                    title: "Shell script to install all the dependencies of the API server",
+                    hours: 4,
+                    skill: 'aiEngineer',
+                    children: []
+                });
 
-            deploymentTask.children.push({
-                type: "document",
-                title: "Documentation describing the front-facing endpoints of the API server, to be used by people consuming the API",
-                hours: 4 * humanTimeMultiplier,
-                skill: 'aiEngineer',
-                children: []
-            });
+                deploymentTask.children.push({
+                    type: "document",
+                    title: "Documentation describing the front-facing endpoints of the API server, to be used by people consuming the API",
+                    hours: 4 * humanTimeMultiplier,
+                    skill: 'aiEngineer',
+                    children: []
+                });
+            }
         }
 
         if (this.type === 'rpa') {
