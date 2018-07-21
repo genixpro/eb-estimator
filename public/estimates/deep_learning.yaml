@@ -1,0 +1,57 @@
+title: Deep Learning
+form:
+  - title: Data Types
+    type: options
+    fields:
+      - field: structured
+        title: Structured Data
+      - field: text
+        title: Text
+      - field: images
+        title: Images
+      - field: video
+        title: Video
+      - field: other
+        title: Other
+  - title: Features
+    type: options
+    fields:
+      - field: api_server
+        title: API Server
+  - title: Data Preparation
+    type: options
+    fields:
+      - field: convert_existing_data
+        title: Do we need a script to convert existing training data into a usable
+      - field: custom_word_embeddings
+        title: Custom word embeddings?
+        if: text
+      - field: word_positioning
+        title: Word positioning (height, width)?
+        if: text
+      - field: part_of_speech
+        title: Part-of-speech (e.g. verb/noun/adjective/preposition)?
+        if: text
+      - field: word_dependencies
+        title: Word-dependencies (e.g. this verb applies to this noun)?
+        if: text
+  - title: Research Cycle
+    type: select
+    options:
+      - value: minimum
+        title: Minimum / Quick & Dirty
+      - value: small
+        title: Small
+      - value: medium
+        title: Medium / Normal
+      - value: large
+        title: Large
+  - title: Measurement Metrics
+    type: options
+    fields:
+      - field: confusion_matrix
+        title: Compute Confusion Matrix?
+      - field: roc_curve
+        title: Compute ROC Curve?
+      - field: worst_samples
+        title: Show 50 Worst Samples?
