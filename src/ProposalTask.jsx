@@ -37,7 +37,7 @@ class ProposalTask extends Component
                 <td>{this.props.task.taskNumber}</td>
                 <td>{this.props.task.type}</td>
                 <td>{this.props.task.title}</td>
-                <td style={ {'textAlign':'right', 'font-family': 'monospace'} }>{this.props.task.hours !== null ? this.props.task.hours.toFixed(1) : ""}</td>
+                <td style={ {'textAlign':'right', 'fontFamily': 'monospace'} }>{this.props.task.hours !== null ? this.props.task.hours.toFixed(1) : ""}</td>
 
 
                 <td>
@@ -60,7 +60,7 @@ class ProposalTask extends Component
                 <td>
                     {
                         this.props.task.hours ?
-                            <p style={ {'textAlign':'right', 'font-family': 'monospace'} }>
+                            <p style={ {'textAlign':'right', 'fontFamily': 'monospace'} }>
                                 <NumberFormat value={this.props.skillRates[this.props.task.skill] * this.props.task.hours} displayType={'text'} thousandSeparator={true} prefix={'$'} decimalScale={0} />
                             </p> : ""
                     }
@@ -69,7 +69,7 @@ class ProposalTask extends Component
                 <td>
                     {
                         (this.computeGroupTotals().hours && this.computeGroupTotals().hours > this.props.task.hours) ?
-                            <p style={ {'textAlign':'right', 'font-family': 'monospace'} }>
+                            <p style={ {'textAlign':'right', 'fontFamily': 'monospace'} }>
                                 {this.computeGroupTotals().hours.toFixed(1)}
                             </p> : ""
                     }
@@ -78,7 +78,7 @@ class ProposalTask extends Component
                 <td>
                     {
                         (this.computeGroupTotals().hours && this.computeGroupTotals().hours > this.props.task.hours) ?
-                            <p style={ {'textAlign':'right', 'font-family': 'monospace'} }>
+                            <p style={ {'textAlign':'right', 'fontFamily': 'monospace'} }>
                                 <NumberFormat value={this.computeGroupTotals().cost} displayType={'text'} thousandSeparator={true} prefix={'$'} decimalScale={0} />
                             </p> : ""
                     }

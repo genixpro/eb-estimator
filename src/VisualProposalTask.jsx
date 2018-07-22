@@ -18,7 +18,7 @@ class VisualProposalTask extends Component
                 <td>{this.props.task.taskNumber}</td>
                 <td>{this.props.task.title}</td>
                 <td style={ {'textAlign':'right'} }>{this.props.task.hours !== null ? this.props.task.hours.toFixed(1) : ""}</td>
-                <td>{this.props.task.image ? <img src={this.props.task.image} style={{"maxWidth": "100%", "maxHeight": "300px"}}/> : null}</td>
+                <td>{this.props.task.image ? <img alt={"Image for " + this.props.task.title} src={this.props.task.image} style={{"maxWidth": "100%", "maxHeight": "300px"}}/> : null}</td>
             </tr>
         );
     }

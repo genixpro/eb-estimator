@@ -1,10 +1,13 @@
-title: Custom Estimate
-button: Add Custom
-type: custom
+title: User Interface Estimate
+button: Add User Interface
+type: user_interface
 form:
-  - title: Tasks
+  - title: Mockup
+    type: image
+    field: mockup
+  - title: Cropped Components From Mockup
     type: table
-    field: tasks
+    field: components
     columns:
       - field: type
         title: Type
@@ -23,17 +26,6 @@ form:
             title: Task
           - value: document
             title: Document
-      - field: skill
-        title: Skill
-        type: select
-        maxWidth: 150
-        options:
-          - value: aiEngineer
-            title: AI Engineer
-          - value: fullStackDeveloper
-            title: Full Stack Developer
-          - value: rpaConsultant
-            title: RPA Consultant
       - field: title
         title: Title
         type: text
@@ -41,6 +33,11 @@ form:
         title: Hours
         type: number
         maxWidth: 75
+      - field: mockup
+        title: Mockup
+        type: crop
+        minWidth: 150
+        mainImageField: mockup
     ensureEmpty: true
     emptyField: title
     emptyData:
@@ -52,19 +49,18 @@ form:
 
 
 default:
-  tasks:
+  components:
     - name: New Task
       type: component
       hours: 0
-      skill: fullStackDeveloper
-
 
 tasks:
   - title: {item.title}
-    each: processes
+    each: components
     emptyField: title
     type: {item.type}
-    skill: {item.skill}
+    skill: fullStackDeveloper
     hours: {item.hours}
     description: {item.description}
+    image: {item.mockup}
 

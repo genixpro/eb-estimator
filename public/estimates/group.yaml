@@ -1,0 +1,21 @@
+title:
+button: Add Group
+type: group
+form:
+  - title: Name of group
+    type: text
+    field: title
+    placeholder: The name of this group
+    gridSize: 6
+  - title: Phase
+    type: number
+    field: phase
+    min: 0
+    placeholder: The phase these tasks are done in
+    gridSize: 6
+
+
+default:
+  title: New Group
+  phase:
+

@@ -1,4 +1,6 @@
 title: Deep Learning
+button: Add Deep Learning
+type: deep_learning
 form:
   - title: Data Types
     type: options

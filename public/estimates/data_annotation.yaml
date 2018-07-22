@@ -1,4 +1,6 @@
 title: Data Annotation
+button: Add Data Annotation
+type: data_annotation
 form:
   - title: Estimated time
     type: number

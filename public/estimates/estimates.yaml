@@ -1,0 +1,8 @@
+files:
+  - estimates/custom_estimate.yaml
+  - estimates/data_annotation.yaml
+  - estimates/deep_learning.yaml
+  - estimates/group.yaml
+  - estimates/rpa.yaml
+  - estimates/user_interface.yaml
+

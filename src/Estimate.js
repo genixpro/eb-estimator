@@ -609,7 +609,7 @@ export class Estimate {
             });
 
             expenses.push({
-                title: `GPU Server Cost - ${numberOfExperiments * (machineTimePerExperiment + machineTimePerExperimentContingency)} hours at \$${machineTimeCostPerHour.toFixed(2)}/hour`,
+                title: `GPU Server Cost - ${numberOfExperiments * (machineTimePerExperiment + machineTimePerExperimentContingency)} hours at $${machineTimeCostPerHour.toFixed(2)}/hour`,
                 cost: numberOfExperiments * (machineTimePerExperiment + machineTimePerExperimentContingency) * machineTimeCostPerHour,
             });
 

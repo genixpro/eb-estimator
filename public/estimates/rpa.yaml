@@ -1,4 +1,6 @@
 title: Robotic Process Automation
+button: Add RPA
+type: rpa
 form:
   - title: General
     type: options

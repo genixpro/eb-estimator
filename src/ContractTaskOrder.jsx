@@ -1,22 +1,13 @@
 import React, {Component} from 'react';
-import {Estimate, Task} from './Estimate.js';
+import {Task} from './Estimate.js';
 import NumberFormat from 'react-number-format';
 import './ContractPageCSS.css';
 import {
-    Grid,
     Row,
     Col,
-    Tabs,
-    Tab,
-    Button,
-    ListGroup,
-    ListGroupItem,
-    Table,
     ControlLabel,
-    Form,
     FormGroup,
-    FormControl,
-    Checkbox
+    FormControl
 } from 'react-bootstrap';
 
 
@@ -191,12 +182,12 @@ class ContractTaskOrder extends Component {
                         </tr>
                         {
                             this.getPhases().map((phase, phaseIndex) =>
-                                <tr className="c14">
+                                <tr className="c14" key={phaseIndex}>
                                     <td className="c28" colSpan="1" rowSpan="1"><p className="c3">
-                                        <span className="c2" style={{"font-weight": "bold"}}>Phase {phaseIndex + 1}. </span>
+                                        <span className="c2" style={{"fontWeight": "bold"}}>Phase {phaseIndex + 1}. </span>
                                         <br/><br/>
                                         {
-                                            phase.tasks.map((task) => <p><span>{task.taskNumber}. </span><span className="c2">{task.title}</span></p>)
+                                            phase.tasks.map((task) => <span key={task.taskNumber}><span>{task.taskNumber}. </span><span className="c2">{task.title}</span></span>)
                                         }
                                     </p></td>
                                     <td className="c32" colSpan="1" rowSpan="1"><p className="c3"><span className="c2 c10">[INSERT DATE HERE]</span></p></td>
@@ -258,7 +249,6 @@ class ContractTaskOrder extends Component {
                             className="c2">&nbsp; All fees listed below are inclusive of 13% HST. Any other fees discussed in this Task Order and the Service Agreement and are subject to 13% HST.</span>
                         </li>
                     </ol>
-                    <a id="t.14b750e56bcd2b953b876deb64529e49acd08b6e"></a><a id="t.1"></a>
                     <table className="c19">
                         <tbody>
                         <tr className="c14">
@@ -284,7 +274,7 @@ class ContractTaskOrder extends Component {
                                 for (let payment = 1; payment < this.props.paymentSchedule.length; payment += 1)
                                 {
                                     elements.push(
-                                        <tr className="c14">
+                                        <tr className="c14" key={payment}>
                                             <td className="c24" colSpan="1" rowSpan="1">
                                                 <p className="c3 c18"><span className="c2">Completion of Phase {payment}</span></p>
                                             </td>
@@ -315,7 +305,7 @@ class ContractTaskOrder extends Component {
                     </table>
                     <p className="c9 c34"><span className="c2"></span></p>
                     <p className="c23"><span className="c2">[REMAINDER OF PAGE LEFT INTENTIONALLY BLANK]</span></p>
-                    <hr style={ {"page-break-before":"always","display":"none"} }/>
+                    <hr style={ {"pageBreakBefore":"always","display":"none"} }/>
                     <p className="c20 c34"><span className="c5">IN WITNESS WHEREOF</span><span className="c2">&nbsp;the Parties hereto have executed this Task Order as of the date first above written.</span>
                     </p>
                     <p className="c9"><span className="c26"></span></p>
@@ -349,8 +339,7 @@ class ContractTaskOrder extends Component {
                     <p className="c20"><span
                         className="c26">[NTD: IF CONTRACT IS WITH A COMPANY, USE THIS SIGNATURE LINE]</span>
                     </p>
-                    <p className="c9"><span className="c2"></span></p><a
-                    id="t.2ec6de0ac589ea3f5c42e2689ccaf55ba35788b0"></a><a id="t.2"></a>
+                    <p className="c9"><span className="c2"></span></p>
                     <table className="c19">
                         <tbody>
                         <tr className="c14">

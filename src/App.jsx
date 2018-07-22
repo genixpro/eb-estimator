@@ -10,7 +10,6 @@ import {
     ListGroupItem,
     Table,
     ControlLabel,
-    Form,
     FormGroup,
     FormControl,
     Checkbox
@@ -24,10 +23,14 @@ import ContractTaskOrder from './ContractTaskOrder';
 import clone from 'clone';
 
 
-import SortableTree, {addNodeUnderParent, removeNodeAtPath, changeNodeAtPath} from 'react-sortable-tree';
+import SortableTree, {removeNodeAtPath, changeNodeAtPath} from 'react-sortable-tree';
 import 'react-sortable-tree/style.css'; // This only needs to be imported once in your app
 
 import './App.css';
+import axios from "axios/index";
+import yaml from "js-yaml";
+
+import _ from 'underscore';
 
 class App extends Component {
 
@@ -46,8 +49,30 @@ class App extends Component {
             data.selected = 0;
         }
 
+        data.forms = {};
+        data.formList = [];
+
         this.state = data;
         this.saveState();
+    }
+
+    componentDidMount() {
+        axios.get('estimates/estimates.yaml').then((response) =>
+        {
+            const filesToLoad = yaml.safeLoad(response.data).files;
+            filesToLoad.forEach((file) => {
+                axios.get(file).then((response) =>
+                {
+                    const formOptions = yaml.safeLoad(response.data);
+                    this.setState((state) => {
+                        const forms = _.extend({}, state.forms, {[formOptions.type]: formOptions});
+                        state.forms = forms;
+                        state.formList = Object.values(forms);
+                        return state;
+                    });
+                });
+            });
+        });
     }
 
     getDefaultProject() {
@@ -71,7 +96,9 @@ class App extends Component {
         const defaultProject = this.getDefaultProject();
         return {
             projects: [defaultProject],
-            selected: 0
+            selected: 0,
+            forms: {},
+            formList: []
         };
     }
 
@@ -112,93 +139,16 @@ class App extends Component {
         return "estimate-" + key.toString();
     }
 
-    addDeepLearningEstimate() {
-        const newEstimate = {
-            title: "New Deep Learning Algorithm.",
-            key: this.nextEstimateKey(),
-            type: "deep_learning",
-            children: []
-        };
+    addNewEstimate(type)
+    {
+        const newEstimate = _.clone(this.state.forms[type].default);
+        newEstimate.key = this.nextEstimateKey();
+        newEstimate.type = type;
+
         const project = this.state.projects[this.state.selected];
         project.estimates = project.estimates.concat([newEstimate]);
         this.setState({projects: this.state.projects}, this.saveState.bind(this));
     }
-
-    addDataAnnotation() {
-        const newEstimate = {
-            key: this.nextEstimateKey(),
-            type: "data_annotation",
-            children: []
-        };
-        const project = this.state.projects[this.state.selected];
-        project.estimates = project.estimates.concat([newEstimate]);
-        this.setState({projects: this.state.projects}, this.saveState.bind(this));
-    }
-
-    addCustom() {
-        const newEstimate = {
-            key: this.nextEstimateKey(),
-            type: "custom",
-            title: "",
-            tasks: [{
-                type: "component",
-                title: "New Task",
-                hours: 0,
-                skill: "fullStackDeveloper",
-                children: []
-            }],
-            children: []
-        };
-        const project = this.state.projects[this.state.selected];
-        project.estimates = project.estimates.concat([newEstimate]);
-        this.setState({projects: this.state.projects}, this.saveState.bind(this));
-    }
-
-    addRPAEstimate() {
-        const newEstimate = {
-            title: "New RPA Estimate",
-            key: this.nextEstimateKey(),
-            type: "rpa",
-            processes: [{
-                name: "New Process",
-                steps: 5
-            }],
-            children: []
-        };
-        const project = this.state.projects[this.state.selected];
-        project.estimates = project.estimates.concat([newEstimate]);
-        this.setState({projects: this.state.projects}, this.saveState.bind(this));
-    }
-
-    addGroup() {
-        const newEstimate = {
-            key: this.nextEstimateKey(),
-            type: "group",
-            title: "New Estimate Group",
-            children: []
-        };
-        const project = this.state.projects[this.state.selected];
-        project.estimates = project.estimates.concat([newEstimate]);
-        this.setState({projects: this.state.projects}, this.saveState.bind(this));
-    }
-
-    addUserInterfaceEstimate() {
-        const newEstimate = {
-            key: this.nextEstimateKey(),
-            type: "user_interface",
-            title: "User Interface",
-            components: [{
-                type: "component",
-                title: "New Task",
-                hours: 0
-            }],
-            children: []
-        };
-        const project = this.state.projects[this.state.selected];
-        project.estimates = project.estimates.concat([newEstimate]);
-        this.setState({projects: this.state.projects}, this.saveState.bind(this));
-    }
-
 
     resetProject() {
         window.bootbox.confirm("Are you sure you want to reset your estimates? You will lose everything.", (result) => {
@@ -478,7 +428,7 @@ class App extends Component {
             if (totalHoursBySkill[skill])
             {
                 fees.push({
-                    title: `${skillTitles[skillIndex]} - ${totalHoursBySkill[skill].toFixed(1)} hours @ \$${this.state.projects[this.state.selected].skillRates[skill]} / hour`,
+                    title: `${skillTitles[skillIndex]} - ${totalHoursBySkill[skill].toFixed(1)} hours @ $${this.state.projects[this.state.selected].skillRates[skill]} / hour`,
                     amount: totalHoursBySkill[skill] * this.state.projects[this.state.selected].skillRates[skill]
                 });
             }
@@ -506,7 +456,6 @@ class App extends Component {
             net: 0
         };
 
-        const project = this.state.projects[this.state.selected];
         const fees = this.getProjectFees();
 
         // Now create the subtotal
@@ -702,27 +651,12 @@ class App extends Component {
                                         </Col>
                                     </Row>
                                     <Row className="show-grid">
-                                        <Col xs={6} md={3}>
-                                            <Button onClick={this.addDeepLearningEstimate.bind(this)}>Add Deep Learning
-                                                Algorithm</Button>
-                                        </Col>
-                                        <Col xs={6} md={3}>
-                                            <Button onClick={this.addDataAnnotation.bind(this)}>Add Data
-                                                Annotation</Button>
-                                        </Col>
-                                        <Col xs={6} md={3}>
-                                            <Button onClick={this.addRPAEstimate.bind(this)}>Add RPA</Button>
-                                        </Col>
-                                        <Col xs={6} md={3}>
-                                            <Button onClick={this.addCustom.bind(this)}>Add Custom</Button>
-                                        </Col>
-                                        <Col xs={6} md={3}>
-                                            <Button onClick={this.addGroup.bind(this)}>Add Group</Button>
-                                        </Col>
-                                        <Col xs={6} md={3}>
-                                            <Button onClick={this.addUserInterfaceEstimate.bind(this)}>Add User
-                                                Interface</Button>
-                                        </Col>
+                                        {
+                                            this.state.formList.map((form) =>
+                                            {
+                                                return <Col xs={6} md={3} key={form.type}><Button onClick={this.addNewEstimate.bind(this, form.type)}>{form.button}</Button></Col>;
+                                            })
+                                        }
                                     </Row>
                                     <Row className="estimate-tree">
                                         <Col xs={12}>
@@ -730,7 +664,8 @@ class App extends Component {
                                                 <SortableTree
                                                     treeData={this.state.projects[this.state.selected].estimates}
                                                     onChange={estimates => {
-                                                        this.state.projects[this.state.selected].estimates = estimates;
+                                                        const project = this.state.projects[this.state.selected];
+                                                        project.estimates = estimates;
                                                         this.setState({projects: this.state.projects}, this.saveState.bind(this))
                                                     }}
                                                     rowHeight={(data) => this.getHeightForEstimate(data.node)}
@@ -740,6 +675,7 @@ class App extends Component {
                                                             <div>
                                                                 <EstimateConfiguration
                                                                     estimate={node}
+                                                                    formOptions={this.state.forms[node.type]}
                                                                     index={path}
                                                                     onChange={this.estimateChanged.bind(this, path)}
                                                                     deleteEstimate={this.deleteEstimate.bind(this, path)}
@@ -813,11 +749,11 @@ class App extends Component {
                                             </thead>
                                             <tbody>
                                             {
-                                                this.getAllFees().map((fee) =>
-                                                    <tr>
+                                                this.getAllFees().map((fee, feeIndex) =>
+                                                    <tr key={feeIndex}>
                                                         <td>{fee.title}</td>
                                                         <td>
-                                                            <p style={ {'textAlign':'right', 'font-family': 'monospace'} }>
+                                                            <p style={ {'textAlign':'right', 'fontFamily': 'monospace'} }>
                                                                 <NumberFormat value={fee.amount} displayType={'text'} thousandSeparator={true} prefix={'$'} decimalScale={0} />
                                                             </p>
                                                         </td>
@@ -831,7 +767,7 @@ class App extends Component {
                                         <p>
                                             <span>As a project which involves a high amount of experimental research, this project qualifies for the SR&ED tax-rebate. </span>
                                             <span>This rebate provides HST plus an additional 35% refund off the price of the project. This means a </span>
-                                            <span style={{"font-weight": "bold"}}><NumberFormat value={this.computeProjectTotals().sred} displayType={'text'} thousandSeparator={true} prefix={'$'} decimalScale={0} /> </span>
+                                            <span style={{"fontWeight": "bold"}}><NumberFormat value={this.computeProjectTotals().sred} displayType={'text'} thousandSeparator={true} prefix={'$'} decimalScale={0} /> </span>
                                             <span>savings off the total price of the project. This is provided as a tax-rebate from the Canadian government, and can be either monthly or at the end of the fiscal year. </span>
                                             <span>Electric Brain will prepare materials to be used as part of the SR&ED claim, but its the ultimate responsibility of the client to file the claim. </span>
                                             <span>We recommend filing with an experienced SR&ED consultant for best results. </span>
@@ -840,7 +776,7 @@ class App extends Component {
                                         <p>The fees will be broken down into {this.state.projects[this.state.selected].numberOfPayments} payments</p>
                                         <ul>
                                             {this.getPaymentSchedule().map((payment, index) =>
-                                                <li>
+                                                <li key={index}>
                                                     {(payment * 100).toFixed(0)}%
                                                     (<NumberFormat value={this.getProjectTotal() * payment} displayType={'text'} thousandSeparator={true} prefix={'$'} decimalScale={0} />)
                                                     {index === 0 ? <span> is due prior to starting the project.</span> : null}
