@@ -109,6 +109,7 @@ export class Estimate {
             script += ` "hours": ${taskConfig.hours ? `Math.ceil(${taskConfig.hours})` : null},`;
             script += ` "skill": \`${taskConfig.skill || null}\`,`;
             script += ` "description": \`${taskConfig.description || ""}\`,`;
+            script += ` "image": \`${taskConfig.image || ""}\`,`;
             script += ` "children": []`;
             script += `};`;
 
