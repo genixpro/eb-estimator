@@ -1,0 +1,59 @@
+title: Custom Estimate
+form:
+  - title: Tasks
+    type: table
+    field: tasks
+    columns:
+      - field: type
+        title: Type
+        type: select
+        maxWidth: 150
+        options:
+          - value: component
+            title: Component
+          - value: script
+            title: Script
+          - value: feature
+            title: Feature
+          - value: function
+            title: Function
+          - value: task
+            title: Task
+          - value: document
+            title: Document
+      - field: skill
+        title: Skill
+        type: select
+        maxWidth: 150
+        options:
+          - value: aiEngineer
+            title: AI Engineer
+          - value: fullStackDeveloper
+            title: Full Stack Developer
+          - value: rpaConsultant
+            title: RPA Consultant
+      - field: title
+        title: Title
+        type: text
+      - field: hours
+        title: Hours
+        type: number
+        maxWidth: 75
+    ensureEmpty: true
+    emptyField: title
+    emptyData:
+      type: feature
+      title: ' '
+      skill: fullStackDeveloper
+      hours: 0
+      children: []
+
+tasks:
+  - title: {item.title}
+    each: processes
+    emptyField: title
+    type: {item.type}
+    skill: {item.skill}
+    hours: {item.hours}
+    description: {item.description}
+

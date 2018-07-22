@@ -1,20 +1,97 @@
-title: Data Annotation
+title: Robotic Process Automation
 form:
-  - title: Estimated time
-    type: number
-    field: estimated_time_per_unit
-    placeholder: Estimated time per unit of data (minutes, no breaks/contingency)
-    min: 0
-  - title: Number of Data Points
-    type: number
-    field: number_data_points
-    placeholder: Estimated total data points to be annotated
-    min: 0
-  - title: Locality
-    type: select
-    field: locality
-    options:
-      - value: foreign
-        title: Foreign
-      - value: Local
-        title: local
+  - title: General
+    type: options
+    inline: false
+    fields:
+      - field: vendor_selection
+        title: Include RPA Vendor selection process?
+      - field: deployment_configuration
+        title: Include configuring a fresh RPA Deployment?
+  - title: Processes
+    type: table
+    field: processes
+    columns:
+      - field: name
+        title: Name
+        type: text
+      - field: steps
+        title: Steps
+        type: number
+    ensureEmpty: true
+    emptyField: name
+    emptyData:
+      name: ' '
+      steps: 0
+
+
+
+default:
+  vendor_selection: false
+  deployment_configuration: true
+  processes:
+    - name: New Process
+      steps: 5
+
+
+
+calc:
+  configHoursPerStep: 0.15
+  fieldTestingHoursPerStep: 0.10
+
+
+
+tasks:
+  - title: RPA Vendor Selection
+    type: task
+    skill: rpaConsultant
+    if: vendor_selection
+    children:
+      - title: Initial technical discovery session
+        type: task
+        skill: rpaConsultant
+        hours: 6
+      - title: Preparation of pro/con sheets on compatible vendors
+        type: task
+        skill: rpaConsultant
+        hours: 10
+      - title: Vendor selection session with team
+        type: task
+        skill: rpaConsultant
+        hours: 2
+  - title: RPA Deployment Configuration
+    type: task
+    skill: rpaConsultant
+    if: deployment_configuration
+    children:
+      - title: Go through security protocols to get team access to servers
+        type: task
+        skill: rpaConsultant
+        hours: 8
+      - title: Configure the central RPA bot software and cluster
+        type: task
+        skill: rpaConsultant
+        hours: 40
+  - title: {item.name}
+    each: processes
+    emptyField: name
+    type: component
+    skill: rpaConsultant
+    children:
+      - title: Job shadowing of person performing the process
+        type: task
+        skill: rpaConsultant
+        hours: 2
+      - title: Initial configuration of the process steps within the RPA tool
+        type: task
+        skill: rpaConsultant
+        hours: Math.ceil(8 + item.steps * configHoursPerStep)
+      - title: Process field testing with operations team and refinement
+        type: task
+        skill: rpaConsultant
+        hours: Math.ceil(2 + item.steps * fieldTestingHoursPerStep)
+      - title: Integration of RPA process into other company systems
+        type: task
+        skill: rpaConsultant
+        hours: 8
+

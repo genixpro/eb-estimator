@@ -582,7 +582,7 @@ class App extends Component {
         }
         else if (project.numberOfPayments === 4)
         {
-            return [0.2, 0.3, 0.3, 0.2];
+            return [0.3, 0.2, 0.2, 0.3];
         }
         else if (project.numberOfPayments === 5)
         {
@@ -853,7 +853,7 @@ class App extends Component {
                                         <p>
                                             <span>A 10% discount is offered if the full amount (100%) is paid upon acceptance of the proposal. This amounts to a </span>
                                             <NumberFormat value={this.getProjectTotal() * 0.10} displayType={'text'} thousandSeparator={true} prefix={'$'} decimalScale={0} />
-                                            <span>savings on this project.</span>
+                                            <span>  savings on this project.</span>
                                         </p>
 
                                         <h2>Expenses</h2>

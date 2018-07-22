@@ -2,6 +2,7 @@ title: Deep Learning
 form:
   - title: Data Types
     type: options
+    inline: true
     fields:
       - field: structured
         title: Structured Data
@@ -15,11 +16,13 @@ form:
         title: Other
   - title: Features
     type: options
+    inline: true
     fields:
       - field: api_server
         title: API Server
   - title: Data Preparation
     type: options
+    inline: false
     fields:
       - field: convert_existing_data
         title: Do we need a script to convert existing training data into a usable
@@ -37,6 +40,7 @@ form:
         if: text
   - title: Research Cycle
     type: select
+    field: research_cycle
     options:
       - value: minimum
         title: Minimum / Quick & Dirty
@@ -48,6 +52,7 @@ form:
         title: Large
   - title: Measurement Metrics
     type: options
+    inline: false
     fields:
       - field: confusion_matrix
         title: Compute Confusion Matrix?
@@ -55,3 +60,223 @@ form:
         title: Compute ROC Curve?
       - field: worst_samples
         title: Show 50 Worst Samples?
+
+
+
+default:
+  structured: false
+  text: false
+  image: false
+  audio: false
+  video: false
+  other: false
+  api_server: true
+  convert_existing_data: false
+  custom_word_embeddings: false
+  word_positioning: false
+  part_of_speech: true
+  word_dependencies: true
+  research_cycle: medium
+  confusion_matrix: true
+  roc_curve: true
+  worst_samples: true
+
+
+
+calc:
+  humanTimeMultiplier: 1 + structured * 1 + text * 2 + image * 3 + audio * 2 + video * 4 + other * 3
+  computePowerMultiplier: 1 + structured * 1 + text * 3 + image * 5 + audio * 4 + video * 20 + other * 5
+  numberOfExperiments: "{'minimum': 10, 'small': 25, 'medium':75,'null':75,'undefined':75,'large':150}[String(research_cycle)]"
+  humanTimePerExperiment: 2
+  machineTimePerExperiment: 12 * computePowerMultiplier
+  machineTimeCostPerHour: 1.0
+  machineTimePerExperimentContingency: 8
+
+
+tasks:
+  - title: Data Preparation Pipeline
+    type: component
+    skill: aiEngineer
+    children:
+      - title: Convert existing data into usable training data
+        type: script
+        skill: aiEngineer
+        hours: 5 * humanTimeMultiplier
+        if: convert_existing_data
+      - title: Train custom word-vector model using fastText
+        type: script
+        skill: aiEngineer
+        hours: 8
+        if: text && custom_word_embeddings
+      - title: Prepare training data into Tensorflow format
+        type: script
+        skill: aiEngineer
+        children:
+          - title: Include fast-text pretrained English word embeddings as a feature for each word
+            type: feature
+            skill: aiEngineer
+            hours: 4
+            if: text
+          - title: Include the custom word embeddings as a feature for each word
+            type: feature
+            skill: aiEngineer
+            hours: 4
+            if: text && custom_word_embeddings
+          - title: Include word positioning, such as width, height, x and y as a feature for each word.
+            type: feature
+            skill: aiEngineer
+            hours: 24
+            if: text && word_positioning
+          - title: Include part of speech, (e.g. noun, verb, preposition, adjective, etc...) as a feature
+            type: feature
+            skill: aiEngineer
+            hours: 12
+            if: text && part_of_speech
+          - title: Include dependent words (e.g. this noun applies to this verb) as features.
+            type: feature
+            skill: aiEngineer
+            hours: 12
+            if: text && word_dependencies
+          - title: Serialize the dataset into TFRecords files
+            type: feature
+            skill: aiEngineer
+            hours: 4
+          - title: Break the dataset up into training, testing, and validation sets.
+            type: feature
+            skill: aiEngineer
+            hours: 4
+  - title: Deep Learning Scripts
+    type: component
+    skill: aiEngineer
+    children:
+      - title: Create a script to train a single neural network
+        type: script
+        skill: aiEngineer
+        children:
+          - title: Base neural network architecture, with hooks to change alter hyper-parameters with command line parameters
+            type: feature
+            skill: aiEngineer
+            hours: 4 * humanTimeMultiplier
+          - title: Ability to 'name' a neural network to assist with experimentation
+            type: feature
+            skill: aiEngineer
+            hours: 1
+          - title: Input dataset using Tensorflow 'datasets' API
+            type: feature
+            skill: aiEngineer
+            hours: 1 * humanTimeMultiplier
+          - title: Core training loop, including measuring training & testing accuracy
+            type: feature
+            skill: aiEngineer
+            hours: 1.5 * humanTimeMultiplier
+          - title: Output training & testing accuracy as Tensorflow 'summary' objects which can be viewed within Tensorboard
+            type: feature
+            skill: aiEngineer
+            hours: 2
+          - title: Output a CSV file showing testing accuracy, training accuracy, loss, etc.. after each 100 iterations of the neural network
+            type: feature
+            skill: aiEngineer
+            hours: 2
+          - title: Save checkpoints of the neural network every 5,000 iterations
+            type: feature
+            skill: aiEngineer
+            hours: 1
+          - title: Output a log file containing all standard output
+            type: feature
+            skill: aiEngineer
+            hours: 1
+          - title: Compute two confusion matrixes, (training & testing), and output them as PNG files
+            type: feature
+            skill: aiEngineer
+            hours: 3 + 1 * humanTimeMultiplier
+            if: confusion_matrix
+          - title: Compute two ROC curves (training & testing), and output them as PNG files
+            type: feature
+            skill: aiEngineer
+            hours: 3 + 1 * humanTimeMultiplier
+            if: roc_curve
+          - title: Output a list of the bottom worst 50 testing samples, so that they can be manually reviewed
+            type: feature
+            skill: aiEngineer
+            hours: 1.5 * humanTimeMultiplier
+            if: worst_samples
+      - title: Create a script to retest a saved checkpoint from a neural network
+        type: script
+        skill: aiEngineer
+        children:
+          - title: Load checkpoint
+            type: feature
+            skill: aiEngineer
+            hours: 2
+          - title: Recompute testing accuracy
+            type: feature
+            skill: aiEngineer
+            hours: 0.4 * humanTimeMultiplier
+          - title: Recompute confusion matrix
+            type: feature
+            skill: aiEngineer
+            hours: 0.4 * humanTimeMultiplier
+            if: confusion_matrix
+          - title: Recompute ROC Curve
+            type: feature
+            skill: aiEngineer
+            hours: 0.4 * humanTimeMultiplier
+            if: roc_curve
+          - title: Recompute 50 wost testing samples
+            type: feature
+            skill: aiEngineer
+            hours: 0.4 * humanTimeMultiplier
+            if: worst_samples
+          - title: Compute same metrics for alternative sets like a Validation set
+            type: feature
+            skill: aiEngineer
+            hours: 2
+      - title: Script to optimize the neural network with Hyperopt
+        type: script
+        skill: aiEngineer
+        children:
+          - title: Basic script for local hyper parameter optimization
+            type: feature
+            skill: aiEngineer
+            hours: 2 * humanTimeMultiplier
+          - title: Allow distributing hyperopt across the network, using Hyperopt's builtin functionality
+            type: feature
+            skill: aiEngineer
+            hours: 2
+      - title: Experiment with core deep-neural network
+        type: task
+        skill: aiEngineer
+        children:
+          - title: Setup a bunch of deep-learning enabled GPU servers in order to do research on
+            type: task
+            skill: aiEngineer
+            hours: 2 * humanTimeMultiplier
+          - title: Run experiments with various hyper-parameter configurations in order to optimize accuracy
+            type: task
+            skill: aiEngineer
+            hours: humanTimePerExperiment * numberOfExperiments
+  - title: Deployment
+    type: task
+    skill: aiEngineer
+    if: api_server
+    children:
+      - title: Create a Python API server which serves the neural network model
+        type: component
+        skill: aiEngineer
+        hours: 5 * humanTimeMultiplier
+      - title: Create Python setuptools configuration for API server
+        type: task
+        skill: aiEngineer
+        hours: 2
+      - title: Shell script to install all the dependencies of the API server
+        type: script
+        skill: aiEngineer
+        hours: 4
+      - title: Documentation describing the front-facing endpoints of the API server, to be used by people consuming the API
+        type: document
+        skill: aiEngineer
+        hours: 4 * humanTimeMultiplier
+
+expenses:
+  - title: GPU Server Cost
+    cost: numberOfExperiments * (machineTimePerExperiment + machineTimePerExperimentContingency) * machineTimeCostPerHour
