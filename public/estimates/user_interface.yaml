@@ -55,12 +55,12 @@ default:
       hours: 0
 
 tasks:
-  - title: {item.title}
+  - title: ${item.title}
     each: components
     emptyField: title
-    type: {item.type}
+    type: ${item.type}
     skill: fullStackDeveloper
-    hours: {item.hours}
-    description: {item.description}
-    image: {item.mockup}
+    hours: item.hours
+    description: ${item.description}
+    image: ${item.mockup}
 

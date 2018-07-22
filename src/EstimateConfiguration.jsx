@@ -34,12 +34,12 @@ class EstimateConfiguration extends Component {
     }
 
     calculateHours() {
-        const estimate = new Estimate(this.props.estimate, this.props.index);
+        const estimate = new Estimate(this.props.estimate, this.props.estimateConfigurations, this.props.index);
         return estimate.calculateHours()
     }
 
     calculateExpenses() {
-        const estimate = new Estimate(this.props.estimate, this.props.index);
+        const estimate = new Estimate(this.props.estimate, this.props.estimateConfigurations, this.props.index);
         return estimate.calculateExpenses()
     }
 
@@ -56,16 +56,16 @@ class EstimateConfiguration extends Component {
         this.props.onChange(estimate);
     }
 
-    ensureEmptyTableItem(formOptions)
+    ensureEmptyTableItem(estimateOptions)
     {
         let isEmptyTableItem = false;
-        for (let item of this.props.estimate[formOptions.field]) {
-            if (!(item[formOptions.emptyField].trim())) {
+        for (let item of this.props.estimate[estimateOptions.field]) {
+            if (!(item[estimateOptions.emptyField].trim())) {
                 isEmptyTableItem = true;
             }
         }
         if (!isEmptyTableItem) {
-            this.props.estimate[formOptions.field].push(_.clone(formOptions.emptyData))
+            this.props.estimate[estimateOptions.field].push(_.clone(estimateOptions.emptyData))
         }
     }
 
@@ -75,7 +75,7 @@ class EstimateConfiguration extends Component {
         this.props.onChange(this.props.estimate);
     }
 
-    renderTableEditable(formOptions, columnOption, cellInfo) {
+    renderTableEditable(estimateOptions, columnOption, cellInfo) {
         if (columnOption.type === 'text' || columnOption.type === 'number') {
             return (
                 <div
@@ -99,14 +99,14 @@ class EstimateConfiguration extends Component {
                             }
                         }
 
-                        estimate[formOptions.field][cellInfo.index][cellInfo.column.id] = content;
-                        if (formOptions.ensureEmpty) {
-                            this.ensureEmptyTableItem(formOptions);
+                        estimate[estimateOptions.field][cellInfo.index][cellInfo.column.id] = content;
+                        if (estimateOptions.ensureEmpty) {
+                            this.ensureEmptyTableItem(estimateOptions);
                         }
                         this.props.onChange(estimate);
                     }}
                     dangerouslySetInnerHTML={{
-                        __html: this.props.estimate[formOptions.field][cellInfo.index][cellInfo.column.id].toString().replace(/\s/g, "&nbsp;")
+                        __html: String(this.props.estimate[estimateOptions.field][cellInfo.index][cellInfo.column.id]).replace(/\s/g, "&nbsp;")
                     }}
                 />
             );
@@ -131,8 +131,8 @@ class EstimateConfiguration extends Component {
             return <div>
                 <Button bsStyle="primary" onClick={() => this.showCrop(itemInfo, columnOption.field, columnOption.mainImageField)}>Crop Mockup</Button>
                 {
-                    this.props.estimate[formOptions.field][cellInfo.index][columnOption.field] ?
-                        <img src={this.props.estimate[formOptions.field][cellInfo.index][columnOption.field]} style={{"maxWidth": "100%", "maxHeight": "200px"}} alt={"Cropped UI Mockup"}/>
+                    this.props.estimate[estimateOptions.field][cellInfo.index][columnOption.field] ?
+                        <img src={this.props.estimate[estimateOptions.field][cellInfo.index][columnOption.field]} style={{"maxWidth": "100%", "maxHeight": "200px"}} alt={"Cropped UI Mockup"}/>
                         : null
                 }
             </div>
@@ -251,7 +251,7 @@ class EstimateConfiguration extends Component {
     {
         if (!formConfig)
         {
-            return <div></div>;
+            return <div>&nbsp;</div>;
         }
 
         // This function is used to filter out any form elements which are conditional on other yes/no values
@@ -268,6 +268,99 @@ class EstimateConfiguration extends Component {
             return newList;
         };
 
+
+        const renderInput = (formOption) =>
+            <FormGroup controlId="formHorizontalText">
+                <Col componentClass={ControlLabel} sm={2}>
+                    <p style={{'whiteSpace': 'normal'}}>{formOption.title}</p>
+                </Col>
+                <Col sm={10}>
+                    {
+                        formOption.type === 'options' ?
+                            filterConditions(formOption.fields).map( (fieldOption) =>
+                                <Checkbox inline={formOption.inline} checked={this.props.estimate[fieldOption.field]} onChange={this.checkboxClicked.bind(this, fieldOption.field)}>{fieldOption.title}</Checkbox>
+                            ) : null
+                    }
+                    {
+                        formOption.type === 'select' ?
+                            <select value={this.props.estimate[formOption.field]} onChange={this.optionChanged.bind(this, formOption.field)}>
+                                {
+                                    filterConditions(formOption.options).map( (fieldOption) => (<option value={fieldOption.value}>{fieldOption.title}</option>))
+                                }
+                            </select> : null
+                    }
+                    {
+                        formOption.type === 'number' ?
+                            <div>
+                                <FormControl type="number" placeholder={formOption.placeholder} min={formOption.min} value={this.props.estimate[formOption.field]} onChange={this.optionChanged.bind(this, formOption.field)}/>
+                            </div> : null
+                    }
+                    {
+                        formOption.type === 'text' ?
+                            <div>
+                                <FormControl type="text" placeholder={formOption.placeholder} value={this.props.estimate[formOption.field]} onChange={this.optionChanged.bind(this, formOption.field)}/>
+                            </div> : null
+                    }
+                    {
+                        formOption.type === 'table' ?
+                            <div>
+                                <ReactTable
+                                    data={this.props.estimate[formOption.field]}
+                                    columns={
+                                        formOption.columns.map((columnOption) => {
+                                            const options = {
+                                                Header: columnOption.title,
+                                                accessor: columnOption.field,
+                                                Cell: this.renderTableEditable.bind(this, formOption, columnOption)
+                                            };
+                                            if (columnOption.minWidth)
+                                            {
+                                                options.minWidth = columnOption.minWidth;
+                                            }
+                                            if (columnOption.maxWidth)
+                                            {
+                                                options.maxWidth = columnOption.maxWidth;
+                                            }
+                                            return options;
+                                        })
+                                    }
+                                    defaultPageSize={10}
+                                    className="-striped -highlight"
+                                />
+                            </div> : null
+                    }
+                    {
+                        formOption.type === 'image' ?
+                            <div>
+                                <Button bsStyle="default" onClick={this.uploadNewImage.bind(this, formOption.field)}>Upload {formOption.title}</Button>
+                                {
+                                    this.props.estimate[formOption.field] ?
+                                        <img src={this.props.estimate[formOption.field]} style={{"maxWidth": "50%", "maxHeight": "200px"}} alt={"UI Mockup"}/>
+                                        : null
+                                }
+                            </div> : null
+                    }
+                </Col>
+            </FormGroup>;
+
+        let currentGridPos = 0;
+
+        const rows = [];
+        let currentRow = [];
+        filterConditions(formConfig.form).forEach((formOption) =>
+        {
+            const gridSize = (formOption.gridSize || 12);
+            if (currentGridPos + gridSize > 12)
+            {
+                rows.push(currentRow);
+                currentRow = [];
+                currentGridPos = 0;
+            }
+            currentRow.push(formOption);
+            currentGridPos += gridSize;
+        });
+        rows.push(currentRow);
+
         return (
             <div>
                 {
@@ -279,92 +372,24 @@ class EstimateConfiguration extends Component {
                         </Row>
                         : null
                 }
-                <Row>
+
                 {
-                    filterConditions(formConfig.form).map((formOption) =>
-                        <Col sm={formOption.gridSize || 12} key={formOption.title}>
-                            <br/>
-                            <FormGroup controlId="formHorizontalText">
-                                <Col componentClass={ControlLabel} sm={2}>
-                                    <p style={{'whiteSpace': 'normal'}}>{formOption.title}</p>
-                                </Col>
-                                <Col sm={10}>
-                                    {
-                                        formOption.type === 'options' ?
-                                            <div>
-                                                {
-                                                    filterConditions(formOption.fields).map( (fieldOption) =>
-                                                        <Checkbox inline={formOption.inline} checked={this.props.estimate[fieldOption.field]} onChange={this.checkboxClicked.bind(this, fieldOption.field)}>{fieldOption.title}</Checkbox>
-                                                    )
-                                                }
-                                            </div> : null
-                                    }
-                                    {
-                                        formOption.type === 'select' ?
-                                            <select value={this.props.estimate[formOption.field]} onChange={this.optionChanged.bind(this, formOption.field)}>
-                                                {
-                                                    filterConditions(formOption.options).map( (fieldOption) => (<option value={fieldOption.value}>{fieldOption.title}</option>))
-                                                }
-                                            </select> : null
-                                    }
-                                    {
-                                        formOption.type === 'number' ?
-                                            <div>
-                                                <FormControl type="number" placeholder={formOption.placeholder} min={formOption.min} value={this.props.estimate[formOption.field]} onChange={this.optionChanged.bind(this, formOption.field)}/>
-                                            </div> : null
-                                    }
-                                    {
-                                        formOption.type === 'text' ?
-                                            <div>
-                                                <FormControl type="text" placeholder={formOption.placeholder} value={this.props.estimate[formOption.field]} onChange={this.optionChanged.bind(this, formOption.field)}/>
-                                            </div> : null
-                                    }
-                                    {
-                                        formOption.type === 'table' ?
-                                            <div>
-                                                <ReactTable
-                                                    data={this.props.estimate[formOption.field]}
-                                                    columns={
-                                                        formOption.columns.map((columnOption) => {
-                                                            const options = {
-                                                                Header: columnOption.title,
-                                                                accessor: columnOption.field,
-                                                                Cell: this.renderTableEditable.bind(this, formOption, columnOption)
-                                                            };
-                                                            if (columnOption.minWidth)
-                                                            {
-                                                                options.minWidth = columnOption.minWidth;
-                                                            }
-                                                            if (columnOption.maxWidth)
-                                                            {
-                                                                options.maxWidth = columnOption.maxWidth;
-                                                            }
-                                                            return options;
-                                                        })
-                                                    }
-                                                    defaultPageSize={10}
-                                                    className="-striped -highlight"
-                                                />
-                                            </div> : null
-                                    }
-                                    {
-                                        formOption.type === 'image' ?
-                                            <div>
-                                                <Button bsStyle="default" onClick={this.uploadNewImage.bind(this, formOption.field)}>Upload {formOption.title}</Button>
-                                                {
-                                                    this.props.estimate[formOption.field] ?
-                                                        <img src={this.props.estimate[formOption.field]} style={{"maxWidth": "50%", "maxHeight": "200px"}} alt={"UI Mockup"}/>
-                                                        : null
-                                                }
-                                            </div> : null
-                                    }
-                                </Col>
-                            </FormGroup>
-                            <br/>
-                        </Col>
-                    )
+                    rows.map((row, rowIndex) => {
+                        return <Row key={rowIndex}>
+                            {
+                                row.map((formOption) =>
+                                    <Col sm={formOption.gridSize || 12} key={formOption.title}>
+                                        <Row>
+                                            <br/>
+                                            {renderInput(formOption)}
+                                            <br/>
+                                        </Row>
+                                    </Col>
+                                )
+                            }
+                        </Row>;
+                    })
                 }
-                </Row>
             </div>
         )
     }
@@ -376,7 +401,7 @@ class EstimateConfiguration extends Component {
                     {/*<pre>{JSON.stringify(this.props.estimate, null, 2)}</pre>*/}
                     <Col xs={12} md={10}>
                         {
-                            this.renderForm(this.props.formOptions)
+                            this.renderForm(this.props.estimateOptions)
                         }
                     </Col>
                     <Col xs={4} md={2}>

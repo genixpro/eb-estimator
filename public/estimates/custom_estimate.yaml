@@ -53,18 +53,18 @@ form:
 
 default:
   tasks:
-    - name: New Task
+    - title: New Task
       type: component
       hours: 0
       skill: fullStackDeveloper
 
 
 tasks:
-  - title: {item.title}
-    each: processes
+  - title: ${item.title}
+    each: tasks
     emptyField: title
-    type: {item.type}
-    skill: {item.skill}
-    hours: {item.hours}
-    description: {item.description}
+    type: ${item.type}
+    skill: ${item.skill}
+    hours: item.hours
+    description: ${item.description}
 

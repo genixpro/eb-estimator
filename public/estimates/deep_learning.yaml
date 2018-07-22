@@ -10,7 +10,7 @@ form:
         title: Structured Data
       - field: text
         title: Text
-      - field: images
+      - field: image
         title: Images
       - field: video
         title: Video

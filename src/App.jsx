@@ -49,8 +49,8 @@ class App extends Component {
             data.selected = 0;
         }
 
-        data.forms = {};
-        data.formList = [];
+        data.estimateConfigurations = {};
+        data.estimateConfigurationList = [];
 
         this.state = data;
         this.saveState();
@@ -65,9 +65,9 @@ class App extends Component {
                 {
                     const formOptions = yaml.safeLoad(response.data);
                     this.setState((state) => {
-                        const forms = _.extend({}, state.forms, {[formOptions.type]: formOptions});
-                        state.forms = forms;
-                        state.formList = Object.values(forms);
+                        const estimateConfigurations = _.extend({}, state.estimateConfigurations, {[formOptions.type]: formOptions});
+                        state.estimateConfigurations = estimateConfigurations;
+                        state.estimateConfigurationList = Object.values(estimateConfigurations);
                         return state;
                     });
                 });
@@ -97,8 +97,8 @@ class App extends Component {
         return {
             projects: [defaultProject],
             selected: 0,
-            forms: {},
-            formList: []
+            estimateConfigurations: {},
+            estimateConfigurationList: []
         };
     }
 
@@ -141,7 +141,7 @@ class App extends Component {
 
     addNewEstimate(type)
     {
-        const newEstimate = _.clone(this.state.forms[type].default);
+        const newEstimate = _.clone(this.state.estimateConfigurations[type].default);
         newEstimate.key = this.nextEstimateKey();
         newEstimate.type = type;
 
@@ -237,8 +237,11 @@ class App extends Component {
         tasks = tasks.concat(this.createProjectSetupTasks());
 
         this.state.projects[this.state.selected].estimates.forEach((data, index) => {
-            const estimate = new Estimate(data, index);
-            tasks = tasks.concat(estimate.createTasksAndExpenses([]).tasks);
+            if (this.state.estimateConfigurations[data.type])
+            {
+                const estimate = new Estimate(data, this.state.estimateConfigurations, index);
+                tasks = tasks.concat(estimate.createTasksAndExpenses([]).tasks);
+            }
         });
 
         tasks = tasks.map(clone);
@@ -318,33 +321,85 @@ class App extends Component {
         if (estimate.type === 'group') {
             return 120;
         }
-        if (estimate.type === 'deep_learning') {
-            return 500;
-        }
-        if (estimate.type === 'data_annotation') {
-            return 400;
-        }
-        if (estimate.type === 'custom') {
-            return 700;
-        }
-        if (estimate.type === 'rpa') {
-            return 700;
-        }
-        if (estimate.type === 'user_interface') {
-            let base = 700;
+        else
+        {
+            if (!this.state.estimateConfigurations[estimate.type])
+            {
+                return 100;
+            }
 
-            // Add in the heights for each mockup
-            estimate.components.forEach((component) => {
-                if (component.mockup) {
-                    const elem = document.createElement("img");
-                    elem.setAttribute("src", component.mockup);
-                    base += Math.min(200, elem.naturalHeight);
+            let height = 100;
+            this.state.estimateConfigurations[estimate.type].form.forEach((formOptions) =>
+            {
+                if (formOptions.if && !estimate[formOptions.if])
+                {
+                    return;
+                }
+
+                if (formOptions.type === 'text')
+                {
+                    height += 50;
+                }
+                else if (formOptions.type === 'number')
+                {
+                    height += 50;
+                }
+                else if (formOptions.type === 'select')
+                {
+                    height += 50;
+                }
+                else if (formOptions.type === 'image')
+                {
+                    height += 250;
+                }
+                else if (formOptions.type === 'options')
+                {
+                    if (formOptions.inline)
+                    {
+                        height += 50;
+                    }
+                    else
+                    {
+                        height += 30;
+                        formOptions.fields.forEach((field) =>
+                        {
+                            if (!field.if || estimate[field.if])
+                            {
+                                height += 30;
+                            }
+                        });
+                    }
+                }
+                else if (formOptions.type === 'table')
+                {
+                    height += 500;
+
+                    let hasImageEntries = false;
+                    let imageColumn = null;
+                    formOptions.columns.forEach((column) =>
+                    {
+                        if (column.type === 'crop')
+                        {
+                            hasImageEntries = true;
+                            imageColumn  = column;
+                        }
+                    });
+                    if (hasImageEntries)
+                    {
+                        estimate[formOptions.field].forEach((item) =>
+                        {
+                            if (item[imageColumn.field])
+                            {
+                                const elem = document.createElement("img");
+                                elem.setAttribute("src", item[imageColumn.field]);
+                                height += Math.min(200, elem.naturalHeight) - 30;
+                            }
+                        });
+                    }
                 }
             });
-
-            return base;
+            return height;
         }
-        return 200;
     }
 
     newProject() {
@@ -385,8 +440,11 @@ class App extends Component {
         let expenses = [];
 
         this.state.projects[this.state.selected].estimates.forEach((data, index) => {
-            const estimate = new Estimate(data, index);
-            expenses = expenses.concat(estimate.createTasksAndExpenses([]).expenses);
+            if (this.state.estimateConfigurations[data.type])
+            {
+                const estimate = new Estimate(data, this.state.estimateConfigurations, index);
+                expenses = expenses.concat(estimate.createTasksAndExpenses([]).expenses);
+            }
         });
 
         expenses = expenses.map(clone);
@@ -652,7 +710,7 @@ class App extends Component {
                                     </Row>
                                     <Row className="show-grid">
                                         {
-                                            this.state.formList.map((form) =>
+                                            this.state.estimateConfigurationList.map((form) =>
                                             {
                                                 return <Col xs={6} md={3} key={form.type}><Button onClick={this.addNewEstimate.bind(this, form.type)}>{form.button}</Button></Col>;
                                             })
@@ -673,13 +731,18 @@ class App extends Component {
                                                     generateNodeProps={({node, path}) => ({
                                                         title: (
                                                             <div>
-                                                                <EstimateConfiguration
-                                                                    estimate={node}
-                                                                    formOptions={this.state.forms[node.type]}
-                                                                    index={path}
-                                                                    onChange={this.estimateChanged.bind(this, path)}
-                                                                    deleteEstimate={this.deleteEstimate.bind(this, path)}
-                                                                />
+                                                                {
+                                                                    this.state.estimateConfigurations[node.type] ?
+                                                                        <EstimateConfiguration
+                                                                            estimate={node}
+                                                                            estimateOptions={this.state.estimateConfigurations[node.type]}
+                                                                            estimateConfigurations={this.state.estimateConfigurations}
+                                                                            index={path}
+                                                                            onChange={this.estimateChanged.bind(this, path)}
+                                                                            deleteEstimate={this.deleteEstimate.bind(this, path)}
+                                                                        />
+                                                                        : null
+                                                                }
                                                             </div>
                                                         )
                                                     })}

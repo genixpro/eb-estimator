@@ -74,7 +74,7 @@ tasks:
         type: task
         skill: rpaConsultant
         hours: 40
-  - title: {item.name}
+  - title: ${item.name}
     each: processes
     emptyField: name
     type: component
